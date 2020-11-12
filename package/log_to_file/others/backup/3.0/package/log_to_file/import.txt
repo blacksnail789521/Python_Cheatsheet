@@ -1,0 +1,9 @@
+import sys
+from os.path import join, abspath, dirname
+
+package_paths = [join(abspath(dirname(__file__)), "package", "log_to_file")]
+for package_path in package_paths:
+    if package_path not in sys.path: 
+        sys.path.insert(0, package_path)
+
+from log_to_file import log_to_file, print

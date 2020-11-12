@@ -1,0 +1,77 @@
+Total duration: 15.252s
+
+File: D:\Users\JCHANGI\Jason Chang\Doc\Others\code\line_profiler\some_module.py
+File duration (Own): 13.8 s (90.5 %)
+File duration (Total): 13.8 s
+Line #|  Time (s)|  Own (%)|Total (%)|Source code
+------+----------+---------+---------+-----------
+     1|       0.0|   0.00 %|   0.00 %|exec("""import os\ntry:\n    with open(os.path.join("package", """ +
+     2|       0.0|   0.00 %|   0.00 %|     """ "log_to_file", "import.txt")) as f: exec(f.read())\nexcept:pass""")
+     3|       0.0|   0.00 %|   0.00 %|
+     4|       0.0|   0.00 %|   0.00 %|import time
+     5|       0.0|   0.00 %|   0.00 %|
+     6|       0.0|   0.00 %|   0.00 %|
+     7|       0.0|   0.00 %|   0.00 %|def test_function(number):
+     8|       0.0|   0.00 %|   0.00 %|    print_some_number(number)
+     9|       0.9|   6.52 %|   6.52 %|    time.sleep(1)
+    10|       0.0|   0.00 %|   0.00 %|    intensive_function()
+(call)|      12.9|        X|        X|# D:\Users\JCHANGI\Jason Chang\Doc\Others\code\line_profiler\some_module.py:18 intensive_function
+    11|       0.0|   0.00 %|   0.00 %|    print_some_number(number)
+    12|       0.0|   0.00 %|   0.00 %|#    divide_by_zero()
+    13|       0.0|   0.00 %|   0.00 %|
+    14|       0.0|   0.00 %|   0.00 %|def print_some_number(number):
+    15|       0.0|   0.00 %|   0.00 %|    for i in range(number):
+    16|       0.0|   0.00 %|   0.00 %|        print(i)
+    17|       0.0|   0.00 %|   0.00 %|
+    18|       0.0|   0.00 %|   0.00 %|def intensive_function():
+    19|       0.0|   0.00 %|   0.00 %|    a = 0
+    20|       0.0|   0.00 %|   0.00 %|    for i in range(100000000):
+    21|       8.4|  60.87 %|  60.87 %|        a = minus(a) + 1
+(call)|       4.5|        X|        X|# D:\Users\JCHANGI\Jason Chang\Doc\Others\code\line_profiler\some_module.py:23 minus
+    22|       0.0|   0.00 %|   0.00 %|
+    23|       2.4|  17.39 %|  17.39 %|def minus(a):
+    24|       2.1|  15.22 %|  15.22 %|    return a - 1
+    25|       0.0|   0.00 %|   0.00 %|
+    26|       0.0|   0.00 %|   0.00 %|def divide_by_zero():
+    27|       0.0|   0.00 %|   0.00 %|    1/0
+    
+File: D:/Users/JCHANGI/Jason Chang/Doc/Others/code/line_profiler/some_module_caller.py
+File duration (Own): 0.0 s (0.0 %)
+File duration (Total): 13.8 s
+Line #|  Time (s)|  Own (%)|Total (%)|Source code
+------+----------+---------+---------+-----------
+     1|       0.0|   0.00 %|   0.00 %|exec("""import os\ntry:\n    with open(os.path.join("package", """ +
+(call)|      14.0|        X|        X|# D:\Application\Anaconda\lib\site-packages\spyder_kernels\customize\spydercustomize.py:786 runfile
+     2|       0.0|   0.00 %|   0.00 %|     """ "log_to_file", "import.txt")) as f: exec(f.read())\nexcept:pass""")
+     3|       0.0|   0.00 %|   0.00 %|exec("""import os\ntry:\n    with open(os.path.join("package", """ +
+     4|       0.0|   0.00 %|   0.00 %|     """ "line_profiler", "import.txt")) as f: exec(f.read())\nexcept:pass""")
+     5|       0.0|   0.00 %|   0.00 %|
+     6|       0.0|   0.00 %|   0.00 %|from some_module import test_function
+     7|       0.0|   0.00 %|   0.00 %|import time
+     8|       0.0|   0.00 %|   0.00 %|
+     9|       0.0|   0.00 %|   0.00 %|
+    10|       0.0|   0.00 %|   0.00 %|def main():
+    11|       0.0|   0.00 %|   0.00 %|
+    12|       0.0|   0.00 %|   0.00 %|    number = 10
+    13|       0.0|   0.00 %|   0.00 %|    test_function(number)
+(call)|      13.8|        X| 100.00 %|# D:\Users\JCHANGI\Jason Chang\Doc\Others\code\line_profiler\some_module.py:7 test_function
+    14|       0.0|   0.00 %|   0.00 %|    print("Done")
+    15|       0.0|   0.00 %|   0.00 %|
+    16|       0.0|   0.00 %|   0.00 %|    return "Done"
+    17|       0.0|   0.00 %|   0.00 %|
+    18|       0.0|   0.00 %|   0.00 %|if __name__ == "__main__":
+    19|       0.0|   0.00 %|   0.00 %|
+    20|       0.0|   0.00 %|   0.00 %|#    start= time.time()
+    21|       0.0|   0.00 %|   0.00 %|#    everything_you_want_to_see = main()
+    22|       0.0|   0.00 %|   0.00 %|#    end = time.time()
+    23|       0.0|   0.00 %|   0.00 %|#    print("Total time:", "{:.2f}".format(end - start), "s")
+    24|       0.0|   0.00 %|   0.00 %|    start = time.time()
+    25|       0.0|   0.00 %|   0.00 %|    everything_you_want_to_see = line_profiler( lambda: log_to_file(lambda : main()), \
+(call)|      13.9|        X|        X|# D:\Users\JCHANGI\Jason Chang\Doc\Others\code\line_profiler\package\log_to_file\log_to_file.py:29 log_to_file
+(call)|      13.8|        X|        X|# D:/Users/JCHANGI/Jason Chang/Doc/Others/code/line_profiler/some_module_caller.py:10 main
+    26|       0.0|   0.00 %|   0.00 %|                                                blacklist = ["package"] )
+(call)|      14.0|        X|        X|# D:\Users\JCHANGI\Jason Chang\Doc\Others\code\line_profiler\package\line_profiler\line_profiler.py:207 line_profiler
+    27|       0.0|   0.00 %|   0.00 %|    end = time.time()
+    28|       0.0|   0.00 %|   0.00 %|    del print
+    29|       0.0|   0.00 %|   0.00 %|    print("{:.2f}".format(end - start))
+    30|       0.0|   0.00 %|   0.00 %|#    everything_you_want_to_see = line_profiler(lambda : main())

@@ -1,0 +1,14 @@
+File: D:\Users\JCHANGI\Jason Chang\Doc\Others\code\line_profiler\some_module.py
+File duration (Total): 2.2 s 
+  Line #|  Time (s)|Total (%)|Source code
+--------+----------+---------+-----------
+       9|       0.9|  40.91 %|    time.sleep(1)
+      21|       0.6|  27.27 %|        a = minus(a) + 1
+      24|       0.5|  22.73 %|    return a - 1
+      23|       0.2|   9.09 %|def minus(a):
+
+File: D:/Users/JCHANGI/Jason Chang/Doc/Others/code/line_profiler/some_module_caller.py
+File duration (Total): 2.2 s 
+  Line #|  Time (s)|Total (%)|Source code
+--------+----------+---------+-----------
+    (13)|       2.2| 100.00 %|# D:\Users\JCHANGI\Jason Chang\Doc\Others\code\line_profiler\some_module.py:7 test_function ( test_function(number) )

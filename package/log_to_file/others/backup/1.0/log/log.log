@@ -1,0 +1,219 @@
+2019-08-12 18:16:39 |       | 1
+2019-08-12 18:16:56 |       | 1
+2019-08-12 18:16:57 | ERROR | D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py:12: UserWarning: I'm Warning!
+2019-08-12 18:16:58 | ERROR |   warnings.warn(r"I'm Warning!")
+2019-08-12 18:16:58 | ERROR | Traceback (most recent call last):
+2019-08-12 18:16:58 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 37, in <module>
+2019-08-12 18:16:58 | ERROR |     main()
+2019-08-12 18:16:58 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 20, in main
+2019-08-12 18:16:58 | ERROR |     test_program(number)
+2019-08-12 18:16:58 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 14, in test_program
+2019-08-12 18:16:58 | ERROR |     1/0
+2019-08-12 18:16:58 | ERROR | ZeroDivisionError: division by zero
+==================================================================================
+2019-08-12 18:23:08 |       | 1
+2019-08-12 18:23:09 | ERROR | D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py:12: UserWarning: I'm Warning!
+2019-08-12 18:23:10 | ERROR |   warnings.warn(r"I'm Warning!")
+2019-08-12 18:23:10 | ERROR | Traceback (most recent call last):
+2019-08-12 18:23:10 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 35, in <module>
+2019-08-12 18:23:10 | ERROR |     main()
+2019-08-12 18:23:10 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 20, in main
+2019-08-12 18:23:10 | ERROR |     test_program(number)
+2019-08-12 18:23:10 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 14, in test_program
+2019-08-12 18:23:10 | ERROR |     1/0
+2019-08-12 18:23:10 | ERROR | ZeroDivisionError: division by zero
+==================================================================================
+2019-08-12 18:23:20 |       | 1
+2019-08-12 18:23:22 | ERROR | Traceback (most recent call last):
+2019-08-12 18:23:22 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 35, in <module>
+2019-08-12 18:23:22 | ERROR |     main()
+2019-08-12 18:23:22 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 20, in main
+2019-08-12 18:23:22 | ERROR |     test_program(number)
+2019-08-12 18:23:22 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 14, in test_program
+2019-08-12 18:23:22 | ERROR |     1/0
+2019-08-12 18:23:22 | ERROR | ZeroDivisionError: division by zero
+==================================================================================
+2019-08-12 18:23:26 |       | 1
+2019-08-12 18:23:27 | ERROR | D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py:12: UserWarning: I'm Warning!
+2019-08-12 18:23:28 | ERROR |   warnings.warn(r"I'm Warning!")
+2019-08-12 18:23:28 | ERROR | Traceback (most recent call last):
+2019-08-12 18:23:28 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 35, in <module>
+2019-08-12 18:23:28 | ERROR |     main()
+2019-08-12 18:23:28 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 20, in main
+2019-08-12 18:23:28 | ERROR |     test_program(number)
+2019-08-12 18:23:28 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 14, in test_program
+2019-08-12 18:23:28 | ERROR |     1/0
+2019-08-12 18:23:28 | ERROR | ZeroDivisionError: division by zero
+==================================================================================
+2019-08-12 18:23:30 |       | 1
+2019-08-12 18:23:31 | ERROR | D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py:12: UserWarning: I'm Warning!
+2019-08-12 18:23:32 | ERROR |   warnings.warn(r"I'm Warning!")
+2019-08-12 18:23:32 | ERROR | Traceback (most recent call last):
+2019-08-12 18:23:32 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 35, in <module>
+2019-08-12 18:23:32 | ERROR |     main()
+2019-08-12 18:23:32 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 20, in main
+2019-08-12 18:23:32 | ERROR |     test_program(number)
+2019-08-12 18:23:32 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 14, in test_program
+2019-08-12 18:23:32 | ERROR |     1/0
+2019-08-12 18:23:32 | ERROR | ZeroDivisionError: division by zero
+==================================================================================
+2019-08-13 13:40:06 |       | 1
+2019-08-13 13:40:07 | ERROR | D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py:12: UserWarning: I'm Warning!
+2019-08-13 13:40:08 | ERROR |   warnings.warn(r"I'm Warning!")
+2019-08-13 13:40:08 | ERROR | Traceback (most recent call last):
+2019-08-13 13:40:08 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 35, in <module>
+2019-08-13 13:40:08 | ERROR |     main()
+2019-08-13 13:40:08 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 20, in main
+2019-08-13 13:40:08 | ERROR |     test_program(number)
+2019-08-13 13:40:08 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 14, in test_program
+2019-08-13 13:40:08 | ERROR |     1/0
+2019-08-13 13:40:08 | ERROR | ZeroDivisionError: division by zero
+==================================================================================
+2019-08-13 13:44:46 |       | 1
+2019-08-13 13:44:47 | ERROR | D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py:12: UserWarning: I'm Warning!
+2019-08-13 13:44:48 | ERROR |   warnings.warn(r"I'm Warning!")
+2019-08-13 13:44:48 | ERROR | Traceback (most recent call last):
+2019-08-13 13:44:48 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 35, in <module>
+2019-08-13 13:44:48 | ERROR |     main()
+2019-08-13 13:44:48 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 20, in main
+2019-08-13 13:44:48 | ERROR |     test_program(number)
+2019-08-13 13:44:48 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 14, in test_program
+2019-08-13 13:44:48 | ERROR |     1/0
+2019-08-13 13:44:48 | ERROR | ZeroDivisionError: division by zero
+==================================================================================
+2019-08-13 13:44:54 |       | 1
+2019-08-13 13:44:56 | ERROR | Traceback (most recent call last):
+2019-08-13 13:44:56 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 35, in <module>
+2019-08-13 13:44:56 | ERROR |     main()
+2019-08-13 13:44:56 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 20, in main
+2019-08-13 13:44:56 | ERROR |     test_program(number)
+2019-08-13 13:44:56 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 14, in test_program
+2019-08-13 13:44:56 | ERROR |     1/0
+2019-08-13 13:44:56 | ERROR | ZeroDivisionError: division by zero
+==================================================================================
+2019-08-13 13:45:00 |       | 1
+2019-08-13 13:45:01 | ERROR | D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py:12: UserWarning: I'm Warning!
+2019-08-13 13:45:02 | ERROR |   warnings.warn(r"I'm Warning!")
+2019-08-13 13:45:02 | ERROR | Traceback (most recent call last):
+2019-08-13 13:45:02 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 35, in <module>
+2019-08-13 13:45:02 | ERROR |     main()
+2019-08-13 13:45:02 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 20, in main
+2019-08-13 13:45:02 | ERROR |     test_program(number)
+2019-08-13 13:45:02 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 14, in test_program
+2019-08-13 13:45:02 | ERROR |     1/0
+2019-08-13 13:45:02 | ERROR | ZeroDivisionError: division by zero
+==================================================================================
+2019-08-13 13:46:17 |       | 1
+2019-08-13 13:46:18 | ERROR | D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py:12: UserWarning: I'm Warning!
+2019-08-13 13:46:19 | ERROR |   warnings.warn(r"I'm Warning!")
+2019-08-13 13:46:19 | ERROR | Traceback (most recent call last):
+2019-08-13 13:46:19 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 35, in <module>
+2019-08-13 13:46:19 | ERROR |     main()
+2019-08-13 13:46:19 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 20, in main
+2019-08-13 13:46:19 | ERROR |     test_program(number)
+2019-08-13 13:46:19 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 14, in test_program
+2019-08-13 13:46:19 | ERROR |     1/0
+2019-08-13 13:46:19 | ERROR | ZeroDivisionError: division by zero
+==================================================================================
+2019-08-13 13:46:21 |       | 1
+2019-08-13 13:46:22 | ERROR | D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py:12: UserWarning: I'm Warning!
+2019-08-13 13:46:23 | ERROR |   warnings.warn(r"I'm Warning!")
+2019-08-13 13:46:23 | ERROR | Traceback (most recent call last):
+2019-08-13 13:46:23 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 35, in <module>
+2019-08-13 13:46:23 | ERROR |     main()
+2019-08-13 13:46:23 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 20, in main
+2019-08-13 13:46:23 | ERROR |     test_program(number)
+2019-08-13 13:46:23 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 14, in test_program
+2019-08-13 13:46:23 | ERROR |     1/0
+2019-08-13 13:46:23 | ERROR | ZeroDivisionError: division by zero
+==================================================================================
+2019-08-13 13:46:28 |       | 1
+2019-08-13 13:46:29 | ERROR | D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py:12: UserWarning: I'm Warning!
+2019-08-13 13:46:30 | ERROR |   warnings.warn(r"I'm Warning!")
+2019-08-13 13:46:30 | ERROR | Traceback (most recent call last):
+2019-08-13 13:46:30 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 35, in <module>
+2019-08-13 13:46:30 | ERROR |     main()
+2019-08-13 13:46:30 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 20, in main
+2019-08-13 13:46:30 | ERROR |     test_program(number)
+2019-08-13 13:46:30 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 14, in test_program
+2019-08-13 13:46:30 | ERROR |     1/0
+2019-08-13 13:46:30 | ERROR | ZeroDivisionError: division by zero
+==================================================================================
+2019-08-13 13:46:33 |       | 1
+2019-08-13 13:46:34 | ERROR | D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py:12: UserWarning: I'm Warning!
+2019-08-13 13:46:35 | ERROR |   warnings.warn(r"I'm Warning!")
+2019-08-13 13:46:35 | ERROR | Traceback (most recent call last):
+2019-08-13 13:46:35 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 35, in <module>
+2019-08-13 13:46:35 | ERROR |     main()
+2019-08-13 13:46:35 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 20, in main
+2019-08-13 13:46:35 | ERROR |     test_program(number)
+2019-08-13 13:46:35 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 14, in test_program
+2019-08-13 13:46:35 | ERROR |     1/0
+2019-08-13 13:46:35 | ERROR | ZeroDivisionError: division by zero
+==================================================================================
+2019-08-13 13:46:44 |       | 1
+2019-08-13 13:46:45 | ERROR | D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py:12: UserWarning: I'm Warning!
+2019-08-13 13:46:46 | ERROR |   warnings.warn(r"I'm Warning!")
+2019-08-13 13:46:46 | ERROR | Traceback (most recent call last):
+2019-08-13 13:46:46 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 35, in <module>
+2019-08-13 13:46:46 | ERROR |     main()
+2019-08-13 13:46:46 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 20, in main
+2019-08-13 13:46:46 | ERROR |     test_program(number)
+2019-08-13 13:46:46 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 14, in test_program
+2019-08-13 13:46:46 | ERROR |     1/0
+2019-08-13 13:46:46 | ERROR | ZeroDivisionError: division by zero
+==================================================================================
+2019-08-13 13:46:47 |       | 1
+2019-08-13 13:46:48 | ERROR | D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py:12: UserWarning: I'm Warning!
+2019-08-13 13:46:49 | ERROR |   warnings.warn(r"I'm Warning!")
+2019-08-13 13:46:49 | ERROR | Traceback (most recent call last):
+2019-08-13 13:46:49 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 35, in <module>
+2019-08-13 13:46:49 | ERROR |     main()
+2019-08-13 13:46:49 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 20, in main
+2019-08-13 13:46:49 | ERROR |     test_program(number)
+2019-08-13 13:46:49 | ERROR |   File "D:/Users/JCHANGI/Jason Chang/Doc/Others/log_template/test_program.py", line 14, in test_program
+2019-08-13 13:46:49 | ERROR |     1/0
+2019-08-13 13:46:49 | ERROR | ZeroDivisionError: division by zero
+==================================================================================
+2019-08-13 14:16:20 |       | 1
+2019-08-13 14:16:21 | ERROR | test_program.py:11: UserWarning: I'm Warning!
+2019-08-13 14:16:22 | ERROR |   warnings.warn(r"I'm Warning!")
+2019-08-13 14:16:22 | ERROR | Traceback (most recent call last):
+2019-08-13 14:16:22 | ERROR |   File "test_program.py", line 34, in <module>
+2019-08-13 14:16:22 | ERROR |     main()
+2019-08-13 14:16:22 | ERROR |   File "test_program.py", line 19, in main
+2019-08-13 14:16:22 | ERROR |     test_program(number)
+2019-08-13 14:16:22 | ERROR |   File "test_program.py", line 13, in test_program
+2019-08-13 14:16:22 | ERROR |     1/0
+2019-08-13 14:16:22 | ERROR | ZeroDivisionError: division by zero
+==================================================================================
+2019-08-13 14:21:23 |       | 1
+2019-08-13 14:21:24 | ERROR | D:\Users\JCHANGI\Jason Chang\Doc\Others\log_template\test_program.py:11: UserWarning: I'm Warning!
+2019-08-13 14:21:25 | ERROR |   warnings.warn(r"I'm Warning!")
+2019-08-13 14:21:25 | ERROR | Traceback (most recent call last):
+2019-08-13 14:21:25 | ERROR |   File "D:\Users\JCHANGI\Jason Chang\Doc\Others\log_template\test_program.py", line 34, in <module>
+2019-08-13 14:21:25 | ERROR |     main()
+2019-08-13 14:21:25 | ERROR |   File "D:\Users\JCHANGI\Jason Chang\Doc\Others\log_template\test_program.py", line 19, in main
+2019-08-13 14:21:25 | ERROR |     test_program(number)
+2019-08-13 14:21:25 | ERROR |   File "D:\Users\JCHANGI\Jason Chang\Doc\Others\log_template\test_program.py", line 13, in test_program
+==================================================================================
+2019-08-13 14:21:32 |       | 1
+2019-08-13 14:21:33 | ERROR | test_program.py:11: UserWarning: I'm Warning!
+2019-08-13 14:21:34 | ERROR |   warnings.warn(r"I'm Warning!")
+2019-08-13 14:21:34 | ERROR | Traceback (most recent call last):
+2019-08-13 14:21:34 | ERROR |   File "test_program.py", line 34, in <module>
+2019-08-13 14:21:34 | ERROR |     main()
+2019-08-13 14:21:34 | ERROR |   File "test_program.py", line 19, in main
+2019-08-13 14:21:34 | ERROR |     test_program(number)
+2019-08-13 14:21:34 | ERROR |   File "test_program.py", line 13, in test_program
+==================================================================================
+2019-08-13 14:21:39 |       | 1
+2019-08-13 14:21:40 | ERROR | D:\Users\JCHANGI\Jason Chang\Doc\Others\log_template\test_program.py:11: UserWarning: I'm Warning!
+2019-08-13 14:21:41 | ERROR |   warnings.warn(r"I'm Warning!")
+2019-08-13 14:21:41 | ERROR | Traceback (most recent call last):
+2019-08-13 14:21:41 | ERROR |   File "D:\Users\JCHANGI\Jason Chang\Doc\Others\log_template\test_program.py", line 34, in <module>
+2019-08-13 14:21:41 | ERROR |     main()
+2019-08-13 14:21:41 | ERROR |   File "D:\Users\JCHANGI\Jason Chang\Doc\Others\log_template\test_program.py", line 19, in main
+2019-08-13 14:21:41 | ERROR |     test_program(number)
+2019-08-13 14:21:41 | ERROR |   File "D:\Users\JCHANGI\Jason Chang\Doc\Others\log_template\test_program.py", line 13, in test_program
+==================================================================================

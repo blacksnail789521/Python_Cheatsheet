@@ -1,0 +1,9 @@
+[1.0]
+利用sub_process來實現logging
+[2.0]
+改用loguru來實現logging
+[3.0]
+包成一個吃函數的function
+把decorator放到package裡面，這樣使用者就不用再多打一個了
+[4.0]
+新增寫到DB的功能
