@@ -6,7 +6,7 @@ print(f"test_string: {test_string}")
 print("index:      ", "".join([ str(i) for i in range(len(test_string)) ]))
 
 print("-------------------------------------------")
-print("\"serach\" can get first match and its index:")
+print("\"search\" can get first match and its index:")
 element = re.search(r"\d+", test_string)
 print("{number} (start_index: {start_index}, end_index: {end_index})" \
       .format(number = element.group(), start_index = element.start(), end_index = element.end()))

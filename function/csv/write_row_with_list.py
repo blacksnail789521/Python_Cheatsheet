@@ -1,5 +1,4 @@
 import csv
-import numpy as np
 import pandas as pd
 
 
@@ -11,11 +10,11 @@ def write_csv_dynamically(csv_file_path, csv_file_factor_name_list, rows):
     writer.writerow(csv_file_factor_name_list)
     csv_file.close()
     
-    # Write rows
-    for row_in_line in rows:
+    # Write rows.
+    for row_in_list in rows:
         csv_file = open(csv_file_path, "a", newline = "")
         writer = csv.writer(csv_file)
-        writer.writerow(row_in_line)
+        writer.writerow(row_in_list)
         csv_file.close()
 
 
@@ -28,9 +27,9 @@ def write_csv_all_at_once(csv_file_path, csv_file_factor_name_list, rows):
         # Write the factor names.
         writer.writerow(csv_file_factor_name_list)
         
-        # Write rows
-        for row_in_line in rows:
-            writer.writerow(row_in_line)
+        # Write rows.
+        for row_in_list in rows:
+            writer.writerow(row_in_list)
 
 
 def main():
@@ -43,7 +42,7 @@ def main():
     rows = []
     for i in range(10):
         rows.append(["column_1_" + str(i + 1), \
-                     "column_2_" + str(i + 1), np.nan, \
+                     "column_2_" + str(i + 1), None, \
                      "column_3_" + str(i + 1)])
     
     if enable_to_observe_csv_at_any_time == True:

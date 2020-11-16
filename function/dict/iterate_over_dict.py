@@ -21,7 +21,7 @@ print("--------------------------------------")
 for key, value in a.items():
     print(f"key: {key}, value: {value}")
 
-# key and value.
+# index, key, value.
 print("--------------------------------------")
 for index, (key, value) in enumerate(a.items()):
     print(f"index: {index}, key: {key}, value: {value}")

@@ -27,7 +27,7 @@ def draw_wafer(defect_map):
 
 def create_defect_map_with_a_check_mark():
     
-    defect_map = np.zeros((310, 301))
+    defect_map = np.zeros((301, 301))
     # -15 ~ +15 (for being inside the circle, it should be -10 ~ +10)
     x_array, y_array = np.array([]), np.array([])
     x_array = np.append( x_array, ((np.linspace(-10,  0, num = 200) + 15) * 10) )
@@ -39,6 +39,7 @@ def create_defect_map_with_a_check_mark():
         defect_map[ int(x_array[i]) ][ int(y_array[i]) ] = 1
     
     return defect_map
+
 
 defect_map = create_defect_map_with_a_check_mark()
 

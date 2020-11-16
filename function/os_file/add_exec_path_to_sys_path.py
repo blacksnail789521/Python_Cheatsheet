@@ -1,0 +1,1 @@
+exec("""import sys, os\nexec_path=os.path.abspath(os.path.join(os.path.dirname(__file__),""))\nif exec_path not in sys.path:sys.path.insert(0, exec_path)""")
