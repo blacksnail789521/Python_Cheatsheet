@@ -29,7 +29,6 @@ def test_for_decorator_by_func():
         def decorator(function):
             
             # *args and **kwargs are function's input.
-            
             def wrapper(*args, **kwargs):
                 
                 result = greeting(lambda : function(*args, **kwargs), demarcation)
@@ -40,10 +39,14 @@ def test_for_decorator_by_func():
         
         return decorator
     
+    
     @greeting_for_func(demarcation = True)
     def say_hi_by_func(start_message, end_message = "end"):
         
         return say_hi(start_message, end_message)
+    
+    
+    """ Main function of test_for_decorator_by_func. """
     
     return say_hi_by_func("start", end_message = "end")
 
@@ -57,7 +60,6 @@ def test_for_decorator_by_class():
         def decorator(function):
             
             # *args and **kwargs are function's input.
-            
             def wrapper(*args, **kwargs):
                 
                 # Inside wrapper, we must use "_demarcation" instead of "demarcation" because of UnboundLocalError.
@@ -82,27 +84,34 @@ def test_for_decorator_by_class():
         
         return decorator
     
+    
     class say_hi_class():
         
         def __init__(self):
             
             self.demarcation = True
         
+        
         @greeting_for_class()
         def say_hi_by_class(self, start_message, end_message = "end"):
             
             return say_hi(start_message, end_message)
-        
+    
+    
+    """ Main function of test_for_decorator_by_class. """
+    
     return say_hi_class().say_hi_by_class("start", end_message = "end")
     
         
 def main():
     
-    test_for_passing_directly()
-    # test_for_decorator_by_func()
-    # test_for_decorator_by_class()
+    result = test_for_passing_directly()
+    # result = test_for_decorator_by_func()
+    # result = test_for_decorator_by_class()
+    
+    return result
 
 
 if __name__ == "__main__":
 
-    main()
+    result = main()
