@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter.simpledialog import askstring
 
+
 def get_input_from_input_box():
     
     root = tk.Tk()

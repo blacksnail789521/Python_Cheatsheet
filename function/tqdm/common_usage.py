@@ -44,7 +44,7 @@ def test_range():
     
     length = 5
     print("range")
-    for element in trange(length, desc = desc_format):
+    for index in trange(length, desc = desc_format):
         time.sleep(0.25)
 
 

@@ -16,12 +16,14 @@ def popup_message(text, title = "", style = 0):
 
 def compare_two_files(fromfile = "old.py", tofile = "new.py"):
     
-    text1 = open(fromfile).readlines()
-    text2 = open(tofile).readlines()
+    text1 = open(fromfile, "r", encoding = "utf-8", errors = "ignore").readlines()
+    text2 = open(tofile, "r", encoding = "utf-8", errors = "ignore").readlines()
     
+    # Get diff_line_list and convert to string. (Some lines didn't have "\n".)
     diff_line_list = list( difflib.unified_diff(text1, text2, fromfile = fromfile, tofile = tofile, \
                                                 fromfiledate = get_file_modified_time(fromfile), \
                                                 tofiledate = get_file_modified_time(tofile)) )
+    diff_str = "".join([ diff_line if diff_line.endswith("\n") else diff_line + "\n" for diff_line in diff_line_list ])
     
     # We don't have any difference.
     if len(diff_line_list) == 0:
@@ -31,14 +33,18 @@ def compare_two_files(fromfile = "old.py", tofile = "new.py"):
     
     # We do have some differences.
     with open("diff.txt", "w") as diff_file:
-        
-        for diff_line in diff_line_list:
-            print(diff_line)
-            diff_file.write(diff_line)
+        print(diff_str)
+        diff_file.write(diff_str)
+    
+    return diff_str
 
 
 if __name__ == "__main__":
     
     fromfile = "old.py"
     tofile = "new.py"
-    compare_two_files(fromfile, tofile)
+    try:
+        compare_two_files(fromfile, tofile)
+    except Exception as e:
+        print(e)
+        popup_message(str(e), "ERROR")

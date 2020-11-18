@@ -31,9 +31,9 @@ def get_factor_name_match_info(factor_name_x, factor_name_y, String_Matcher = ge
         match_length =  block[2]
         
         factor_name_x_match_info.append({"start_index": x_start_index, "end_index": x_start_index + match_length, \
-                                         "match_content": factor_name_x[x_start_index : x_start_index  + match_length]})
+                                         "match_content": factor_name_x[ x_start_index : x_start_index + match_length ]})
         factor_name_y_match_info.append({"start_index": y_start_index, "end_index": y_start_index + match_length, \
-                                         "match_content": factor_name_y[y_start_index : y_start_index  + match_length]})
+                                         "match_content": factor_name_y[ y_start_index : y_start_index + match_length ]})
     
     return factor_name_x_match_info, factor_name_y_match_info
 
