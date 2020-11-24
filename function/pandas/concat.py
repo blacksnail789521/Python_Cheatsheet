@@ -55,7 +55,7 @@ def test_concat_horizontally(use_same_index = True):
     df = pd.concat(df_list, axis = 1)
     
     # Drop duplicate column_name. (Good habit.)
-    df = df.loc[ : ,~ df.columns.duplicated() ]
+    df = df.loc[ : , ~ df.columns.duplicated() ]
     
     print("-------------------------")
     print("Concatenate horizontally:")

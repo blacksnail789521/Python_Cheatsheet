@@ -1,7 +1,0 @@
-import sys
-from os.path import join, abspath, dirname
-
-if join(abspath(dirname(__file__)), "package", "line_profiler") not in sys.path: 
-    sys.path.insert(0, join(abspath(dirname(__file__)), "package", "line_profiler"))
-
-from line_profiler import line_profiler
