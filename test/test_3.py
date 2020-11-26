@@ -1,5 +1,13 @@
-import numpy as np
 
 
-a = np.random.rand(3, 5) < 0.8
-b = np.random.random((3, 5))
+from loguru import logger
+
+
+logger.remove()
+logger.add("test.log")
+a = logger._core.handlers
+print(a)
+
+
+for handler_id, handler in logger._core.handlers.items():
+    print(handler._name)

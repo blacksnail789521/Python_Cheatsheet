@@ -5,6 +5,7 @@ def print_percent(current_percent, index, show_index):
     else:
         print(f"{current_percent:3} % (index: {index})")
 
+
 def print_by_percent(index, total_length, percent = 10, show_index = False):
     
     current_percent = 100 * index // total_length
