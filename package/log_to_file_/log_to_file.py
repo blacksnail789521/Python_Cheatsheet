@@ -10,13 +10,13 @@ import inspect
 
 def print(*args, **kwargs):
     
-    # If we don't sep, we set sep to " " by default.
+    # If we don't have sep, we set sep to " " by default.
     sep = kwargs.get("sep", " ")
     
-    # If we don't end, we set end to "" by default.
+    # If we don't have end, we set end to "" by default.
     end = kwargs.get("end", "")
     
-    # This line will let print to log to every added handler.
+    # This line will let "print" log to every added handler.
     logger.opt(depth = 1).info \
         ( sep.join([ str(element) for element in list(args) ]) + end )
 

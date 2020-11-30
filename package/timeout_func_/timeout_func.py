@@ -39,4 +39,5 @@ def timeout_func(function, timeout_spec, raise_Exception = False, show_full_func
     if raise_Exception == True:
         raise error_obj_for_raise(error_message)
     else:
+        print(print_message)
         return error_obj_for_return

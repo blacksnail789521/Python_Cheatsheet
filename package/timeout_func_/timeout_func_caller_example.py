@@ -48,7 +48,7 @@ def main():
     
     # If we don't want to raise Exception, we can still distinguish the error from result.
     if isinstance(result, TimeoutError):
-        print("We had a timeout_error.")
+        print("We had a timeout error.")
     elif isinstance(result, BaseException):
         print("We had a {error}.".format(error = result.__class__.__name__))
     else:

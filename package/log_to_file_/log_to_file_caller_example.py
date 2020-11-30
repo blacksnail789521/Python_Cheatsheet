@@ -8,7 +8,7 @@ inner_reraise = False # If True, we should NOT have ZeroDivisionError.
 reraise = False
 
 enable_file = True
-exec_path = os.path.abspath(os.path.join(os.path.dirname((__file__)), ""))
+exec_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ""))
 file_path = os.path.join(exec_path, "(logging)_test.log")
 overwrite_file = True
 
@@ -74,7 +74,7 @@ def some_block_with_decorator(a):
 """------------------------------------------------------------------------"""
 class some_block_class():
     
-    def __init(self):
+    def __init__(self):
         
         self.reraise = reraise
         
@@ -91,7 +91,7 @@ class some_block_class():
         print("inner block after")
     
     
-    @log_to_file_for_func(reraise, enable_file, file_path, overwrite_file)
+    @log_to_file_for_class()
     def some_block(self, a):
         
         print("block before:", a)
@@ -110,7 +110,7 @@ class some_block_class():
 """------------------------------------------------------------------------"""
 
 
-def east_test(a):
+def easy_test(a):
     
     1/0
     
@@ -123,10 +123,10 @@ def main():
     
     # Choose either one.
     output = log_to_file(lambda : some_block_without_decorator(1), reraise = reraise, \
-                          enable_file = enable_file, file_path = file_path, overwrite_file = overwrite_file)
+                         enable_file = enable_file, file_path = file_path, overwrite_file = overwrite_file)
     # output = some_block_with_decorator(1)
     # output = some_block_class().some_block(1)
-    # output = east_test(1)
+    # output = easy_test(1)
     
     time.sleep(3)
     print("##################")
