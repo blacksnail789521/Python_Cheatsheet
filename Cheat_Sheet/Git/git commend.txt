@@ -1,7 +1,3 @@
------------
-git commend
------------
-
 [rebase without changing local changes]
 git pull --rebase --autostash
 
@@ -44,13 +40,8 @@ git remote add origin https://github.com/blacksnail789521/Sharing-Files.git
 git push -u --force origin master
 exit
 
-----------
-.gitignore
-----------
+[go to root of the working tree]
+cd "$(git rev-parse --show-toplevel)"
 
-[ignore all files in any directory named <folder_name>]
-<folder_name>/
-
-[ignore everything except for one folder named <folder_name>]
-*.*
-!**/<folder_name>/**
+[set alias]
+alias <alias>='original_cmd'
