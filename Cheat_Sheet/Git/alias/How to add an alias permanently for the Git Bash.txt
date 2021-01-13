@@ -1,6 +1,6 @@
 1. To add an alias permanently, you'd need to edit the file
-   /C/Program Files/Git/etc/profile.d/aliases.sh .
-   [Ubuntu] ~/.bashrc
+   [Windows] C:\Program Files\Git\etc\profile.d\aliases.sh
+   [Ubuntu]  ~/.bashrc
 2. Run your text editor as an administrator and open that file.
 3. Add your alias and save the file.
 4. Open the Git Bash. Execute 'alias', and you're done. Have fun.
