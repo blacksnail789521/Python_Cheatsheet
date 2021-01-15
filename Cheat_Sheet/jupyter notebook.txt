@@ -1,8 +1,0 @@
-[download all notebooks on jupyter notebook]
-!tar chvfz notebook.tar.gz *
-
-[embed image]
-# Local
-![mnist.png](img/mnist.png)
-# Remote (remember to change from "github.com" to "raw.githubusercontent.com", and remove "/blob")
-![mnist.png](https://raw.githubusercontent.com/blacksnail789521/Programming_Practice/master/PyTorch/.../img/mnist.png)

@@ -1,6 +1,0 @@
-[ignore all files in any directory named <folder_name>]
-<folder_name>/
-
-[ignore everything except for one folder named <folder_name>]
-*.*
-!**/<folder_name>/**
