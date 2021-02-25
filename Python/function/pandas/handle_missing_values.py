@@ -15,5 +15,9 @@ print("fill with forward propagate")
 print(df.fillna(method = "ffill"))
 
 print("----------------------")
+print("fill with back propagate")
+print(df.fillna(method = "bfill"))
+
+print("----------------------")
 print("fill with interpolation")
 print(df.interpolate())
