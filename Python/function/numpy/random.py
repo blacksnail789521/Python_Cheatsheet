@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 np.random.seed(0)
@@ -18,3 +19,10 @@ print( np.random.random(5) )
 print("----------------------------")
 print("Generate 5 float from -10 to 10.")
 print( np.random.uniform(-10, 10, 5) )
+
+print("----------------------------")
+print("Generate 10000 float from 0.1 to 0.0001 in log scale.")
+random_list = sorted(10**np.random.uniform(-4, -1, 10000))
+plt.plot(random_list)
+plt.yscale('log')
+plt.show()
