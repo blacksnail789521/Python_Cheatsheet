@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-np.random.seed(0)
+# np.random.seed(0)
 
 print("----------------------------")
 print("Generate 5 int from 1 to 10.")
