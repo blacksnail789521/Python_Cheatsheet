@@ -1,4 +1,5 @@
 some_string: I'm Jason.
+some_string_2: "I'm Jason."
 some_int: 31
 some_float: 2020.0411
 some_bool: false
