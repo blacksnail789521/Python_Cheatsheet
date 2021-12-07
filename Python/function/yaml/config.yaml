@@ -1,0 +1,11 @@
+some_string: I'm Jason.
+some_int: 31
+some_float: 2020.0411
+some_bool: false
+some_list:
+- element0
+- element1
+outer_dict:
+  outer_key: outer_value
+  inner_dict:
+    inner_key: inner_value

@@ -1,0 +1,12 @@
+new_stuff: XD
+outer_dict:
+  inner_dict:
+    inner_key: inner_value
+  outer_key: outer_value
+some_bool: false
+some_float: 2020.0411
+some_int: 31
+some_list:
+- element0
+- element1
+some_string: I'm Jason.
