@@ -11,3 +11,8 @@ some_list:
 - element1
 some_string: I'm Jason.
 some_string_2: I'm Jason.
+some_tuple: !!python/tuple
+- a
+- b
+- 1
+- 2

@@ -6,6 +6,7 @@ some_bool: false
 some_list:
 - element0
 - element1
+some_tuple: !!python/tuple [a, b, 1, 2]
 outer_dict:
   outer_key: outer_value
   inner_dict:
