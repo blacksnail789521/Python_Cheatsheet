@@ -29,6 +29,8 @@ elif args.verbose:
 else:
     print(f'{args.x}^{args.y}+{args.bias} == {answer}')
 
+
+# Use `python argparse_example.py -h` to get the help message.
 '''
 usage: argparse_example.py [-h] [-v | -q] [-b BIAS] [--batch_size N] x {0,1,2}
 
