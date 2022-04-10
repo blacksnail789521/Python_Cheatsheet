@@ -1,6 +1,7 @@
 import argparse
 
-parser = argparse.ArgumentParser(description='calculate X to the power of Y and add a bias')
+parser = argparse.ArgumentParser(description='calculate X to the power of Y and add a bias',
+                                 formatter_class = argparse.ArgumentDefaultsHelpFormatter) # Show default value
 
 # Exclusive group
 group = parser.add_mutually_exclusive_group()
