@@ -12,8 +12,10 @@ parser.add_argument('-b', '--bias', type=int, help='the bias') # metavar = 'BIAS
 parser.add_argument('--batch_size', type=int, help='the batch_size (not use in this case)', metavar='N')
 parser.add_argument('--enable_bn', type=bool, help='enable batch normalization', default = True)
 parser.add_argument('--model_name', type=str, help='model name', default = 'DNN')
-parser.add_argument('-l1','--list1', nargs='+', help='set all elements in a list', default = ['0'])   # python arg.py -l1 1 2 3 4
-parser.add_argument('-l2','--list2', action='append', help='add element one by one', default = ['0']) # python arg.py -l2 1 -l2 2 -l2 3 -l2 4
+parser.add_argument('-l1','--list1', nargs='+', type=int, # list of int
+                    help='set all elements in a list', default = [0])   # python argparse_example.py -l1 1 2 3 4
+parser.add_argument('-l2','--list2', action='append', type=str, # list of str
+                    help='add element one by one', default = ['a']) # python argparse_example.py -l2 b -l2 c -l2 d
 
 
 # Exclusive group
