@@ -18,7 +18,7 @@ N       nanoseconds
 print('------------------')
 date_index = pd.date_range(start = '2022-08-25 12:00:00', 
                            periods = 5, 
-                           freq = 'min')
+                           freq = 'min') # same as '1min'
 print(date_index)
 '''
 DatetimeIndex(['2022-08-25 12:00:00', '2022-08-25 12:01:00',
@@ -29,14 +29,15 @@ DatetimeIndex(['2022-08-25 12:00:00', '2022-08-25 12:01:00',
 
 
 print('------------------')
-date_index = pd.date_range(start = datetime(2022, 8, 25, 12, 00, 00), 
-                           end = datetime(2022, 8, 25, 12, 00, 5), 
-                           freq = 'S')
+date_index = pd.date_range(start = datetime(2022, 8, 25, 12, 0, 0), 
+                           end = datetime(2022, 8, 25, 12, 1, 0), 
+                           freq = '10S')
 print(date_index)
 '''
-DatetimeIndex(['2022-08-25 12:00:00', '2022-08-25 12:00:01',
-               '2022-08-25 12:00:02', '2022-08-25 12:00:03',
-               '2022-08-25 12:00:04', '2022-08-25 12:00:05'],
-              dtype='datetime64[ns]', freq='S')
+DatetimeIndex(['2022-08-25 12:00:00', '2022-08-25 12:00:10',
+               '2022-08-25 12:00:20', '2022-08-25 12:00:30',
+               '2022-08-25 12:00:40', '2022-08-25 12:00:50',
+               '2022-08-25 12:01:00'],
+              dtype='datetime64[ns]', freq='10S')
 '''
 
