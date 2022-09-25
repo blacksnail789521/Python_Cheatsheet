@@ -3,7 +3,7 @@ import numpy as np
 
 n = 10
 df = pd.DataFrame({"A": [ i for i in range(n) ]}, 
-                   index = pd.date_range("2022-08-25", periods = n, freq = 'S'))
+                  index = pd.date_range("2022-08-25", periods = n, freq = 'S'))
 for i in [1, 2, 3]:
     df.iloc[i] = np.nan
 print(df)
