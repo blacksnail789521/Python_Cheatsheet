@@ -2,7 +2,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import json
 
-def plot_G(G, pos, rad = 0.2, title = '', node_color = '#1f78b4',
+def plot_G(G, pos, title = '', rad = 0.2, node_color = '#1f78b4',
            show_node_name_list = [], show_edge_name_list = []):
     
     nx.draw(G, pos, with_labels = (not show_node_name_list), 
@@ -45,4 +45,5 @@ if __name__ == '__main__':
     ])
 
     pos = nx.circular_layout(G)    
-    plot_G(G, pos, 'G', show_node_name_list, show_edge_name_list)
+    plot_G(G, pos, 'G', show_node_name_list = show_node_name_list, 
+           show_edge_name_list = show_edge_name_list)

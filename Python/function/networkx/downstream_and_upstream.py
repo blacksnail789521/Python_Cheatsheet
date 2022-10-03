@@ -30,15 +30,15 @@ G.add_edges_from([
 ])
 
 pos = nx.get_node_attributes(G,'pos')
-plot_G(G, pos, rad = 0, title = 'G')
+plot_G(G, pos, 'G', rad = 0)
 
 
 # Upstream graph (including source node itself)
 source_node = 5
 upstream_G = G.subgraph([ n for n in nx.bfs_tree(G, source_node, reverse = True) ])
-plot_G(upstream_G, pos, rad = 0, title = 'upstream_G')
+plot_G(upstream_G, pos, 'upstream_G', rad = 0)
 
 # Downstream graph (including source node itself)
 source_node = 5
 downstream_G = G.subgraph([ n for n in nx.bfs_tree(G, source_node) ])
-plot_G(downstream_G, pos, rad = 0, title = 'downstream_G')
+plot_G(downstream_G, pos, 'downstream_G', rad = 0)
