@@ -22,9 +22,13 @@ def plot_G(G, pos, title = '', rad = 0.2, node_color = '#1f78b4',
     plt.show()
 
 
-def plot_G_with_pyvis(G, html_path = 'test.html', show_buttons = True):
+def plot_G_with_pyvis(G, html_path = 'test.html', 
+                      show_buttons = True, add_menu = True):
     
-    net = Network(directed = True, select_menu = True, filter_menu = True)
+    net = Network(directed = True,
+                  select_menu = add_menu, filter_menu = add_menu,
+                  # If we need to add menu, we must have 'lib' folder to render correctly
+    )
     if show_buttons:
         net.show_buttons()
     net.from_nx(G) # Create net directly from nx graph
@@ -60,4 +64,4 @@ if __name__ == '__main__':
            show_edge_name_list = show_edge_name_list)
     
     # Plot with pyvis
-    plot_G_with_pyvis(G, html_path = 'test.html')
+    plot_G_with_pyvis(G, html_path = 'test.html', add_menu = True)
