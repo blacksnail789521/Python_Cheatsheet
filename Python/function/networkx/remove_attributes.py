@@ -1,8 +1,10 @@
 import networkx as nx
+from copy import deepcopy
 
 
 def remove_node_attr(G, unwanted_node_attr_list):
     
+    G = deepcopy(G)
     for node_id, node_attr in G.nodes(data=True):
         [ node_attr.pop(unwanted_node_attr, None) for unwanted_node_attr in unwanted_node_attr_list ]
     
@@ -16,6 +18,7 @@ def remove_node_attr(G, unwanted_node_attr_list):
 
 def remove_edge_attr(G, unwanted_edge_attr_list):
     
+    G = deepcopy(G)
     for source, dest, edge_attr in G.edges(data=True):
         [ edge_attr.pop(unwanted_edge_attr, None) for unwanted_edge_attr in unwanted_edge_attr_list ]
     
