@@ -28,7 +28,8 @@ def remove_edge_attr(G, unwanted_edge_attr_list):
                'We still have some unwanted edge attributes!'
     
     return G
-    
+
+
 if __name__ == '__main__':
     
     G = nx.DiGraph()
