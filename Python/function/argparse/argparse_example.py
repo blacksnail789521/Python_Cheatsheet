@@ -1,4 +1,5 @@
 import argparse
+from pprint import pprint
 
 
 def parse_args() -> argparse.Namespace:
@@ -46,10 +47,17 @@ if __name__ == '__main__':
     
     # Assume we use `python argparse_example.py 3 2`
     args = parse_args()
-    print(args)
+    pprint(vars(args))
 
     '''
-    Namespace(batch_size=None, bias=None, enable_bn=True, list1=[0], list2=['a'], model_name='DNN', quiet=False, verbose=False)
+    {'batch_size': None,
+     'bias': None,
+     'enable_bn': True,
+     'list1': [0],
+     'list2': ['a'],
+     'model_name': 'DNN',
+     'quiet': False,
+     'verbose': False}
     '''
 
 
