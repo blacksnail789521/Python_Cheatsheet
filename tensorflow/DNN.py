@@ -1,11 +1,12 @@
 import tensorflow as tf
+from typing import List
 
 
-def DNN(dimensions, model_name = 'DNN'):
-        
-    tf.keras.backend.clear_session() # We don't want to mess up with model's name
-    
-    '''
+def DNN(dimensions: List, model_name: str = "DNN"):
+
+    tf.keras.backend.clear_session()  # We don't want to mess up with model's name
+
+    """
     model = tf.keras.Sequential([
         tf.keras.Input(shape = (10,)),
         
@@ -19,26 +20,29 @@ def DNN(dimensions, model_name = 'DNN'):
         
         tf.keras.layers.Dense(1),
     ], name = model_name)
-    '''
-    
-    inputs = tf.keras.Input(shape = (dimensions[0]))
+    """
+
+    inputs = tf.keras.Input(shape=(dimensions[0]))
     outputs = inputs
     for dimension in dimensions[1:-1]:
-        outputs = tf.keras.layers.Dense(dimension)(outputs)
+        outputs = tf.keras.layers.Dense(
+            dimension,
+            kernel_regularizer=tf.keras.regularizers.l2(0.01),
+        )(outputs)
         outputs = tf.keras.layers.BatchNormalization()(outputs)
         outputs = tf.keras.layers.ReLU()(outputs)
     outputs = tf.keras.layers.Dense(dimensions[-1])(outputs)
-    
-    model = tf.keras.Model(inputs, outputs, name = model_name)
-    
+
+    model = tf.keras.Model(inputs, outputs, name=model_name)
+
     return model
 
 
-if __name__ == '__main__':
-    
-    model = DNN(dimensions = [10, 1000, 1000, 1])
+if __name__ == "__main__":
+
+    model = DNN(dimensions=[10, 1000, 1000, 1])
     model.summary()
-    '''
+    """
     Model: "DNN"
     _________________________________________________________________
      Layer (type)                Output Shape              Param #   
@@ -66,4 +70,4 @@ if __name__ == '__main__':
     Trainable params: 1,017,001
     Non-trainable params: 4,000
     _________________________________________________________________
-    '''
+    """
