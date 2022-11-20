@@ -2,4 +2,6 @@
 tensorboard/
 __pycache__/
 ray_results/
+models/
 model.png
+lightning_logs/

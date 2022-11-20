@@ -2,12 +2,12 @@ import tensorflow as tf
 import os
 from tensorflow.keras.datasets import mnist
 from datetime import datetime
-from typing import List, Tuple
+from typing import List, Tuple, Union
+import netron
+import matplotlib.pyplot as plt
 
 
-def load_MNIST(
-    batch_size: int = 256, show_shape=False
-) -> Tuple[tf.data.Dataset, tf.data.Dataset]:
+def load_MNIST(batch_size: int = 256) -> Tuple[tf.data.Dataset, tf.data.Dataset]:
 
     # Load numpy data
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -15,9 +15,9 @@ def load_MNIST(
     # Normalize
     x_train, x_test = x_train / 255.0, x_test / 255.0
 
-    # Add a channels dimension
-    x_train = x_train[..., tf.newaxis]
-    x_test = x_test[..., tf.newaxis]
+    # Add a dimension (for channel) (only for the images, a.k.a. x)
+    x_train = x_train[:, :, :, None]
+    x_test = x_test[:, :, :, None]
 
     # Convert to dataset
     train_ds = (
@@ -27,17 +27,30 @@ def load_MNIST(
     )
     test_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test)).batch(32)
 
-    # Show shape if needed
-    if show_shape:
-        x, y = next(iter(train_ds))
-        print(f"x.shape: {x.shape}")
-        print(f"y.shape: {y.shape}")
-
     return train_ds, test_ds
 
 
+def show_data(test_ds: tf.data.Dataset) -> None:
+
+    # Get the first batch
+    x, y = next(iter(test_ds))
+    raise Exception(x)
+    x, y = x.numpy(), y.numpy()
+
+    # Show the shape
+    print(f"x.shape: {x.shape}")
+    print(f"y.shape: {y.shape}")
+
+    # Show the first image and its label
+    plt.imshow(x[0, :, :, 0], cmap="gray")
+    plt.title(f"Label: {y[0]}")
+    plt.show()
+
+
 def DNN(
-    num_layers: int = 2, l2_weight: float = 0.01, optimizer: str = "adam"
+    num_layers: int = 2,
+    l2_weight: float = 0.01,
+    optimizer: Union[str, tf.keras.optimizers.Optimizer] = "adam",
 ) -> tf.keras.Model:
 
     assert (
@@ -47,7 +60,6 @@ def DNN(
     tf.keras.backend.clear_session()  # We don't want to mess up with model's name
 
     # Define the model
-
     """
     model = tf.keras.Sequential([
         tf.keras.layers.Flatten(input_shape=(28, 28)),
@@ -82,10 +94,22 @@ def DNN(
     model.compile(
         optimizer=optimizer,
         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        metrics=["accuracy"],  # Same as tf.keras.metrics.SparseCategoricalAccuracy()
+        # metrics=["accuracy"],  # Same as tf.keras.metrics.SparseCategoricalAccuracy()
+        metrics=[tf.keras.metrics.SparseCategoricalAccuracy()],
     )
 
     return model
+
+
+def plot_model_with_netron(model: tf.keras.Model, name: str = "DNN") -> None:
+
+    # Save the model
+    model_path = os.path.join("models", f"{name}.h5")  # Only support .h5
+    os.makedirs(os.path.dirname(model_path), exist_ok=True)
+    model.save(model_path)
+
+    # Plot the model
+    netron.start(model_path, address=8080)
 
 
 def train_model(
@@ -116,6 +140,14 @@ if __name__ == "__main__":
 
     config = {
         "batch_size": 256,
+        # "optimizer": tf.keras.optimizers.Adam(
+        #     learning_rate=tf.keras.optimizers.schedules.ExponentialDecay(
+        #         initial_learning_rate=0.001,
+        #         decay_steps=1000,
+        #         decay_rate=0.9,
+        #         staircase=True,
+        #     )
+        # ),
         "optimizer": "adam",
         "num_layers": 2,
         "l2_weight": 0.01,
@@ -123,7 +155,10 @@ if __name__ == "__main__":
     }
 
     # Load data
-    train_ds, test_ds = load_MNIST(batch_size=config["batch_size"], show_shape=True)
+    train_ds, test_ds = load_MNIST(batch_size=config["batch_size"])
+
+    # Show the data
+    show_data(test_ds)
 
     # Get the model
     model = DNN(
@@ -132,7 +167,10 @@ if __name__ == "__main__":
         optimizer=config["optimizer"],
     )
     model.summary()
-    tf.keras.utils.plot_model(model, "model.png", show_shapes=True)
+
+    # Plot the model
+    plot_model_with_netron(model)
+    # tf.keras.utils.plot_model(model, "model.png", show_shapes=True)
 
     # Train
     print("---------------------------------------")
