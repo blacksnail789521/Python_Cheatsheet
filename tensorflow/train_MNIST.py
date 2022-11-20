@@ -2,10 +2,12 @@ import tensorflow as tf
 import os
 from tensorflow.keras.datasets import mnist
 from datetime import datetime
-from typing import List
+from typing import List, Tuple
 
 
-def load_MNIST(batch_size: int = 256, show_shape=False):
+def load_MNIST(
+    batch_size: int = 256, show_shape=False
+) -> Tuple[tf.data.Dataset, tf.data.Dataset]:
 
     # Load numpy data
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -34,7 +36,9 @@ def load_MNIST(batch_size: int = 256, show_shape=False):
     return train_ds, test_ds
 
 
-def get_DNN(num_layers: int = 2, l2_weight: float = 0.01, optimizer="adam"):
+def DNN(
+    num_layers: int = 2, l2_weight: float = 0.01, optimizer: str = "adam"
+) -> tf.keras.Model:
 
     assert (
         num_layers >= 1
@@ -48,9 +52,11 @@ def get_DNN(num_layers: int = 2, l2_weight: float = 0.01, optimizer="adam"):
     model = tf.keras.Sequential([
         tf.keras.layers.Flatten(input_shape=(28, 28)),
 
-        # tf.keras.layers.Dense(128),
-        # tf.keras.layers.BatchNormalization(),
-        # tf.keras.layers.ReLU(),
+        -----------------------------------------
+        tf.keras.layers.Dense(128),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.ReLU(),
+        -----------------------------------------
         
         tf.keras.layers.Dense(10),
     ], name = model_name)
@@ -58,7 +64,7 @@ def get_DNN(num_layers: int = 2, l2_weight: float = 0.01, optimizer="adam"):
 
     inputs = tf.keras.Input(shape=(28, 28), name="input")
     outputs = tf.keras.layers.Flatten()(inputs)
-    for dimension in range(num_layers - 1):
+    for _ in range(num_layers - 1):
         outputs = tf.keras.layers.Dense(
             128,
             kernel_regularizer=tf.keras.regularizers.l2(l2_weight),
@@ -88,7 +94,7 @@ def train_model(
     model: tf.keras.Model,
     epochs: int = 3,
     additional_callbacks: List = [],
-):
+) -> None:
 
     # Set callbacks (early_stopping, tensorboard, TerminateOnNaN)
     early_stopping = tf.keras.callbacks.EarlyStopping(
@@ -120,11 +126,12 @@ if __name__ == "__main__":
     train_ds, test_ds = load_MNIST(batch_size=config["batch_size"], show_shape=True)
 
     # Get the model
-    model = get_DNN(
+    model = DNN(
         num_layers=config["num_layers"],
         l2_weight=config["l2_weight"],
         optimizer=config["optimizer"],
     )
+    model.summary()
     tf.keras.utils.plot_model(model, "model.png", show_shapes=True)
 
     # Train
