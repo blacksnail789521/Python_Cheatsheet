@@ -186,24 +186,19 @@ def train_model(
     additional_callbacks: List = [],
 ) -> pl.Trainer:
 
-    # # Set callbacks
-    # callbacks = [
-    #     pl.callbacks.ModelCheckpoint(
-    #         monitor="val_acc",
-    #         dirpath="models",
-    #         filename="DNN-{epoch:02d}-{val_acc:.2f}",
-    #         save_top_k=1,
-    #         mode="max",
-    #     ),
-    #     pl.callbacks.EarlyStopping(monitor="val_acc", patience=3, mode="max"),
-    # ]
-    # callbacks.extend(additional_callbacks)
+    # Set callbacks
+    # (We don't need to set the tensorboard logger because it is set by default)
+    early_stopping_with_TerminateOnNaN = pl.callbacks.EarlyStopping(
+        monitor="val_loss", patience=3, mode="min", verbose=True, check_finite=True
+    )
+    callbacks = [early_stopping_with_TerminateOnNaN]
+    callbacks.extend(additional_callbacks)
 
     # Train the model
     trainer = pl.Trainer(
         max_epochs=epochs,
         gpus=None,  # default
-        # callbacks=callbacks,
+        callbacks=callbacks,
     )
     trainer.fit(model, train_loader, test_loader)
 
