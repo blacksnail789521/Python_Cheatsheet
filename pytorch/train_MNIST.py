@@ -114,16 +114,18 @@ class DNN(pl.LightningModule):
 
         self.layers = []
         self.layers.append(nn.Flatten())
+        current_dim = 28 * 28
         for _ in range(self.hparams.num_layers - 1):
-            self.layers.append(nn.Linear(28 * 28, 128))
+            self.layers.append(nn.Linear(current_dim, 128))
             self.layers.append(nn.BatchNorm1d(128))
             self.layers.append(nn.ReLU(inplace=True))
-        self.layers.append(nn.Linear(128, 10))
+            current_dim = 128
+        self.layers.append(nn.Linear(current_dim, 10))
         self.dnn = nn.Sequential(*self.layers)
 
         # Define loss and metrics
-        self.loss = nn.CrossEntropyLoss()
-        self.acc = torchmetrics.Accuracy()
+        self.loss = nn.CrossEntropyLoss()  # Same as F.nll_loss()
+        self.accuracy = torchmetrics.Accuracy()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
 
@@ -151,8 +153,8 @@ class DNN(pl.LightningModule):
         x, y = batch
         y_pred = self(x)
         loss = self.loss(y_pred, y)
-        self.log("train_loss", loss)
-        self.log("train_acc", self.acc(y_pred, y), prog_bar=True)
+        self.log("loss", loss)
+        self.log("train_accuracy", self.accuracy(y_pred, y), prog_bar=True)
 
         return loss
 
@@ -163,8 +165,8 @@ class DNN(pl.LightningModule):
         x, y = batch
         y_pred = self(x)
         loss = self.loss(y_pred, y)
-        self.log("val_loss", loss)
-        self.log("val_acc", self.acc(y_pred, y), prog_bar=True)
+        self.log("loss", loss)
+        self.log("val_accuracy", self.accuracy(y_pred, y), prog_bar=True)
 
 
 def plot_model_with_netron(model: nn.Module, name: str = "DNN") -> None:
@@ -232,7 +234,7 @@ if __name__ == "__main__":
         "optimizer": "Adam",
         "num_layers": 2,
         "l2_weight": 0.01,
-        "epochs": 1,
+        "epochs": 3,
     }
 
     # Load data
@@ -251,7 +253,7 @@ if __name__ == "__main__":
     )
     print(model)
 
-    # plot_model_with_netron(model)
+    plot_model_with_netron(model)
 
     # Train
     print("---------------------------------------")

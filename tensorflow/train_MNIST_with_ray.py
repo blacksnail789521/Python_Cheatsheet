@@ -26,7 +26,8 @@ def trainable(config: Dict):
         epochs=config["epochs"],
         additional_callbacks=[
             TuneReportCheckpointCallback(
-                metrics={"loss": "val_loss", "accuracy": "val_accuracy"},
+                # metrics={"val_loss": "val_loss", "val_accuracy": "val_accuracy"},
+                metrics=["val_loss", "val_accuracy"],
                 # filename="checkpoint", # (default)
             )
         ],
@@ -56,10 +57,10 @@ if __name__ == "__main__":
             # "epochs": tune.choice([1]),
         },
         tune_config=tune.TuneConfig(
-            num_samples=1,
-            # metric="loss",
+            num_samples=10,
+            # metric="val_loss",
             # mode="min",
-            metric="accuracy",
+            metric="val_accuracy",
             mode="max",
             # search_alg=OptunaSearch(sampler=TPESampler()),
             scheduler=AsyncHyperBandScheduler(  # Same as ASHAScheduler

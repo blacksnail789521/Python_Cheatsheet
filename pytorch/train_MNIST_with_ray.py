@@ -1,58 +1,81 @@
-import torch
-import torch.nn as nn
+from datetime import datetime
+from typing import Dict
+from ray import air, tune
+from ray.tune.schedulers import AsyncHyperBandScheduler
+from ray.tune.integration.pytorch_lightning import TuneReportCheckpointCallback
+from train_MNIST import load_MNIST, DNN, train_model
 
 
-class DNN(nn.Module):
-    
-    def __init__(self, dimensions) -> None:
-        
-        super().__init__()
-        
-        '''
-        self.dnn = nn.Sequential(
-            nn.Linear(10, 1000, bias = True),
-            nn.BatchNorm1d(1000),
-            nn.ReLU(inplace = True),
-            
-            nn.Linear(1000, 1000, bias = True),
-            nn.BatchNorm1d(1000),
-            nn.ReLU(inplace = True),
-            
-            nn.Linear(1000, 1, bias = True),
-        )
-        '''
-        
-        self.layers = []
-        for i in range(len(dimensions) - 1):
-            self.layers.append(nn.Linear(dimensions[i], dimensions[i + 1]))
-            if i < len(dimensions) - 2:
-                self.layers.append(nn.BatchNorm1d(dimensions[i + 1]))
-                self.layers.append(nn.ReLU(inplace = True))
-        
-        self.dnn = nn.Sequential(*self.layers)
-        
-    
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        
-        y = self.dnn(x)
-        
-        return y
+def trainable(config: Dict):
 
+    # Load data
+    train_loader, test_loader, _ = load_MNIST(batch_size=config["batch_size"])
 
-if __name__ == '__main__':
-    
-    model = DNN(dimensions = [10, 1000, 1000, 1]) # include input_dim and output_dim
-    print(model)
-    '''
-    DNN(
-      (dnn): Sequential(
-        (0): Linear(in_features=10, out_features=1000, bias=True)
-        (1): BatchNorm1d(1000, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        (2): ReLU(inplace=True)
-        (3): Linear(in_features=1000, out_features=1000, bias=True)
-        (4): BatchNorm1d(1000, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        (5): ReLU(inplace=True)
-        (6): Linear(in_features=1000, out_features=1, bias=True)
-      )
+    # Get the model
+    model = DNN(
+        num_layers=config["num_layers"],
+        l2_weight=config["l2_weight"],
+        optimizer=config["optimizer"],
     )
-    '''
+
+    # Train
+    train_model(
+        train_loader,
+        test_loader,
+        model,
+        epochs=config["epochs"],
+        additional_callbacks=[
+            TuneReportCheckpointCallback(
+                # metrics={"val_loss": "val_loss", "val_accuracy": "val_accuracy"},
+                metrics=["val_loss", "val_accuracy"],
+                # filename="checkpoint", # (default)
+            )
+        ],
+    )
+
+
+if __name__ == "__main__":
+
+    """
+    1. Define the search space (param_space)
+    2. Define the search algorithm (tune_config/search_alg) # Default is RandomSearch
+    3. Define the scheduler (tune_config/scheduler) # Default is FIFO, but we want to use ASHA
+    4. Define the number of trials (tune_config/num_samples)
+    5. Define the metric (tune_config/metric)
+    6. Define the mode (tune_config/mode)
+    """
+
+    # Pass in a Trainable class or function, along with a search space "config".
+    tuner = tune.Tuner(
+        trainable=tune.with_resources(trainable, resources={"cpu": 1, "gpu": 0}),
+        param_space={
+            "batch_size": tune.choice([32, 64, 128, 256]),
+            "optimizer": tune.choice(["Adam", "NAdam", "SGD"]),
+            "num_layers": tune.choice([1, 2, 3, 4]),
+            "l2_weight": tune.choice([0.01, 0.001, 0.0001]),
+            "epochs": tune.choice([3, 5, 10]),
+        },
+        tune_config=tune.TuneConfig(
+            num_samples=10,
+            # metric="val_loss",
+            # mode="min",
+            metric="val_accuracy",
+            mode="max",
+            # search_alg=OptunaSearch(sampler=TPESampler()),
+            scheduler=AsyncHyperBandScheduler(  # Same as ASHAScheduler
+                time_attr="training_iteration",  # (default)
+                # max_t=100, # (default) max epochs
+                # grace_period=1, # (default) min epochs
+            ),
+            max_concurrent_trials=2,  # default = 0 (unlimited)
+        ),
+        run_config=air.RunConfig(
+            name=f"tune_MNIST_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}",
+            verbose=2,  # default = 2
+            local_dir="./ray_results",
+        ),
+    )
+    results = tuner.fit()
+
+    print("Best hyperparameters found were: ", results.get_best_result().config)
+    df = results.get_dataframe()

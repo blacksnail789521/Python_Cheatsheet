@@ -95,7 +95,7 @@ def DNN(
         optimizer=optimizer,
         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
         # metrics=["accuracy"],  # Same as tf.keras.metrics.SparseCategoricalAccuracy()
-        metrics=[tf.keras.metrics.SparseCategoricalAccuracy()],
+        metrics=[tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")],
     )
 
     return model
