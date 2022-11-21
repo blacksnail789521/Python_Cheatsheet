@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import List, Tuple, Union
 import netron
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def load_MNIST(batch_size: int = 256) -> Tuple[tf.data.Dataset, tf.data.Dataset]:
@@ -34,7 +35,6 @@ def show_data(test_ds: tf.data.Dataset) -> None:
 
     # Get the first batch
     x, y = next(iter(test_ds))
-    raise Exception(x)
     x, y = x.numpy(), y.numpy()
 
     # Show the shape
@@ -136,6 +136,19 @@ def train_model(
     model.fit(train_ds, validation_data=test_ds, epochs=epochs, callbacks=callbacks)
 
 
+def predict_with_model(model: tf.keras.Model, test_ds: tf.data.Dataset) -> None:
+
+    # Get all the predictions (y_pred.shape: (10000, 10))
+    y_pred = model.predict(test_ds)
+
+    # Show the first 5 predictions
+    x, y = next(iter(test_ds))
+    for i in range(5):
+        plt.imshow(x[i, :, :, 0], cmap="gray")
+        plt.title(f"Label: {y[i]}, Prediction: {np.argmax(y_pred[i])}")
+        plt.show()
+
+
 if __name__ == "__main__":
 
     config = {
@@ -179,5 +192,5 @@ if __name__ == "__main__":
 
     # Predict
     print("---------------------------------------")
-    print("Testing ...")
-    y_pred = model.predict(test_ds)
+    print("Predicting ...")
+    predict_with_model(model, test_ds)

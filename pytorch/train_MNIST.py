@@ -17,20 +17,24 @@ class MNIST_Dataset(data.Dataset):
     def __init__(self, mode: str = "train") -> None:
         # Load numpy data
         (x_train, y_train), (x_test, y_test) = mnist.load_data()
-        if mode == "train":
+
+        # Load data based on mode
+        self.mode = mode
+        if self.mode == "train":
             self.x = x_train
             self.y = y_train
-        elif mode == "test":
+        elif self.mode == "test":
             self.x = x_test
             self.y = y_test
+        elif self.mode == "predict":
+            self.x = x_test
 
         # Add a dimension (for channel) (only for the images, a.k.a. x)
         # For pytorch, the channel dimension is the second dimension
         self.x = self.x[:, None, :, :]
 
-        # Change the type to float32
+        # Change the image type to float32
         self.x = self.x.astype(np.float32)
-        # self.y = self.y.astype(np.float32)
 
         # Normalize
         self.x = self.x / 255.0
@@ -39,20 +43,27 @@ class MNIST_Dataset(data.Dataset):
         return len(self.x)
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
-        return self.x[idx], self.y[idx]
+        if self.mode == "train" or self.mode == "test":
+            return self.x[idx], self.y[idx]
+        elif self.mode == "predict":
+            return self.x[idx]
 
 
-def load_MNIST(batch_size: int = 256) -> Tuple[data.DataLoader, data.DataLoader]:
+def load_MNIST(
+    batch_size: int = 256,
+) -> Tuple[data.DataLoader, data.DataLoader, data.DataLoader]:
 
     # Get ds
     train_ds = MNIST_Dataset(mode="train")
     test_ds = MNIST_Dataset(mode="test")
+    predict_ds = MNIST_Dataset(mode="predict")
 
     # Get loader
     train_loader = data.DataLoader(train_ds, batch_size=batch_size, shuffle=True)
     test_loader = data.DataLoader(test_ds, batch_size=32, shuffle=False)
+    predict_loader = data.DataLoader(predict_ds, batch_size=32, shuffle=False)
 
-    return train_loader, test_loader
+    return train_loader, test_loader, predict_loader
 
 
 def show_data(test_loader: data.DataLoader) -> None:
@@ -199,6 +210,26 @@ def train_model(
     return trainer
 
 
+def predict_with_model(
+    model: pl.LightningModule,
+    trainer: pl.Trainer,
+    predict_loader: data.DataLoader,
+    test_loader: data.DataLoader,
+) -> None:
+
+    # Get all the predictions (y_pred_list[0].shape: (32, 10))
+    # (We must use the predict_loader because it's the one without labels)
+    y_pred_list = trainer.predict(model, dataloaders=predict_loader)
+    y_pred = y_pred_list[0]  # Extract the first batch
+
+    # Show the first 5 predictions
+    x, y = next(iter(test_loader))
+    for i in range(5):
+        plt.imshow(x[i, 0, :, :], cmap="gray")
+        plt.title(f"Label: {y[i]}, Prediction: {np.argmax(y_pred[i])}")
+        plt.show()
+
+
 if __name__ == "__main__":
 
     config = {
@@ -210,7 +241,9 @@ if __name__ == "__main__":
     }
 
     # Load data
-    train_loader, test_loader = load_MNIST(batch_size=config["batch_size"])
+    train_loader, test_loader, predict_loader = load_MNIST(
+        batch_size=config["batch_size"]
+    )
 
     # Show the data
     show_data(test_loader)
@@ -232,8 +265,5 @@ if __name__ == "__main__":
 
     # Predict
     print("---------------------------------------")
-    print("Testing ...")
-    model.eval()
-    with torch.no_grad():
-        y_pred = model(test_loader)
-    # y_pred = trainer.predict(dataloaders=test_loader)
+    print("Predicting...")
+    predict_with_model(model, trainer, predict_loader, test_loader)
