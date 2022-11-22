@@ -19,15 +19,12 @@ class MNIST_Dataset(data.Dataset):
         (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
         # Load data based on mode
-        self.mode = mode
-        if self.mode == "train":
+        if mode == "train":
             self.x = x_train
             self.y = y_train
-        elif self.mode == "test":
+        elif mode == "test":
             self.x = x_test
             self.y = y_test
-        elif self.mode == "predict":
-            self.x = x_test
 
         # Add a dimension (for channel) (only for the images, a.k.a. x)
         # For pytorch, the channel dimension is the second dimension
@@ -43,27 +40,22 @@ class MNIST_Dataset(data.Dataset):
         return len(self.x)
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
-        if self.mode == "train" or self.mode == "test":
-            return self.x[idx], self.y[idx]
-        elif self.mode == "predict":
-            return self.x[idx]
+        return self.x[idx], self.y[idx]
 
 
 def load_MNIST(
     batch_size: int = 256,
-) -> Tuple[data.DataLoader, data.DataLoader, data.DataLoader]:
+) -> Tuple[data.DataLoader, data.DataLoader]:
 
     # Get ds
     train_ds = MNIST_Dataset(mode="train")
     test_ds = MNIST_Dataset(mode="test")
-    predict_ds = MNIST_Dataset(mode="predict")
 
     # Get loader
     train_loader = data.DataLoader(train_ds, batch_size=batch_size, shuffle=True)
     test_loader = data.DataLoader(test_ds, batch_size=32, shuffle=False)
-    predict_loader = data.DataLoader(predict_ds, batch_size=32, shuffle=False)
 
-    return train_loader, test_loader, predict_loader
+    return train_loader, test_loader
 
 
 def show_data(test_loader: data.DataLoader) -> None:
@@ -154,7 +146,7 @@ class DNN(pl.LightningModule):
         y_pred = self(x)
         loss = self.loss(y_pred, y)
         self.log("loss", loss)
-        self.log("train_accuracy", self.accuracy(y_pred, y), prog_bar=True)
+        self.log("accuracy", self.accuracy(y_pred, y), prog_bar=True)
 
         return loss
 
@@ -165,8 +157,27 @@ class DNN(pl.LightningModule):
         x, y = batch
         y_pred = self(x)
         loss = self.loss(y_pred, y)
-        self.log("loss", loss)
+        self.log("val_loss", loss)
         self.log("val_accuracy", self.accuracy(y_pred, y), prog_bar=True)
+
+    def test_step(
+        self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int
+    ) -> None:
+
+        x, y = batch
+        y_pred = self(x)
+        loss = self.loss(y_pred, y)
+        self.log("test_loss", loss)
+        self.log("test_accuracy", self.accuracy(y_pred, y), prog_bar=True)
+
+    def predict_step(
+        self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int
+    ) -> torch.Tensor:
+
+        x, y = batch
+        y_pred = self(x)
+
+        return y_pred
 
 
 def plot_model_with_netron(model: nn.Module, name: str = "DNN") -> None:
@@ -177,7 +188,7 @@ def plot_model_with_netron(model: nn.Module, name: str = "DNN") -> None:
     torch.save(model, model_path)  # Don't use .state_dict()
 
     # Plot the model
-    netron.start(model_path, address=8080)
+    netron.start(model_path, address=8081)
 
 
 def train_model(
@@ -210,13 +221,11 @@ def train_model(
 def predict_with_model(
     model: pl.LightningModule,
     trainer: pl.Trainer,
-    predict_loader: data.DataLoader,
     test_loader: data.DataLoader,
 ) -> None:
 
     # Get all the predictions (y_pred_list[0].shape: (32, 10))
-    # (We must use the predict_loader because it's the one without labels)
-    y_pred_list = trainer.predict(model, dataloaders=predict_loader)
+    y_pred_list = trainer.predict(model, dataloaders=test_loader)
     y_pred = y_pred_list[0]  # Extract the first batch
 
     # Show the first 5 predictions
@@ -238,9 +247,7 @@ if __name__ == "__main__":
     }
 
     # Load data
-    train_loader, test_loader, predict_loader = load_MNIST(
-        batch_size=config["batch_size"]
-    )
+    train_loader, test_loader = load_MNIST(batch_size=config["batch_size"])
 
     # Show the data
     show_data(test_loader)
@@ -263,4 +270,4 @@ if __name__ == "__main__":
     # Predict
     print("---------------------------------------")
     print("Predicting...")
-    predict_with_model(model, trainer, predict_loader, test_loader)
+    predict_with_model(model, trainer, test_loader)

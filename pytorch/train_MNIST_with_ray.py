@@ -9,7 +9,7 @@ from train_MNIST import load_MNIST, DNN, train_model
 def trainable(config: Dict):
 
     # Load data
-    train_loader, test_loader, _ = load_MNIST(batch_size=config["batch_size"])
+    train_loader, test_loader = load_MNIST(batch_size=config["batch_size"])
 
     # Get the model
     model = DNN(
