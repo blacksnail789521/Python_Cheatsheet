@@ -8,7 +8,7 @@ from ray.tune.integration.keras import TuneReportCheckpointCallback
 from train_MNIST import load_MNIST, DNN, train_model
 
 
-def trainable(config: Dict, other_kwargs: Optional[Dict] = None):
+def trainable(config: Dict, other_kwargs: Optional[Dict] = None) -> None:
 
     # Load data
     train_ds, test_ds = load_MNIST(batch_size=config["batch_size"])

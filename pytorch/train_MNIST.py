@@ -5,7 +5,7 @@ import os
 from tensorflow.keras.datasets import mnist
 from torchvision import transforms
 from datetime import datetime
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Dict
 import netron
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
@@ -81,13 +81,19 @@ class DNN(pl.LightningModule):
         num_layers: int = 2,
         l2_weight: float = 0.01,
         optimizer: str = "Adam",
+        loss: nn.modules.loss._Loss = nn.CrossEntropyLoss(),
+        metrics: List[Dict[str, torchmetrics.Metric]] = [
+            {"accuracy": torchmetrics.Accuracy()}
+        ],
     ) -> None:
 
         super(DNN, self).__init__()
         assert (
             num_layers >= 1
         ), "We should have at least one layer because the output layer is counted."
-        self.save_hyperparameters()  # We can access the hyperparameters via self.hparams
+        self.save_hyperparameters(
+            ignore=["loss", "metrics"]
+        )  # We can access the hyperparameters via self.hparams
 
         # Define the model
         """
@@ -116,8 +122,8 @@ class DNN(pl.LightningModule):
         self.dnn = nn.Sequential(*self.layers)
 
         # Define loss and metrics
-        self.loss = nn.CrossEntropyLoss()  # Same as F.nll_loss()
-        self.accuracy = torchmetrics.Accuracy()
+        self.loss = loss
+        self.metrics = metrics
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
 
@@ -138,6 +144,21 @@ class DNN(pl.LightningModule):
 
         return [optimizer], [scheduler]
 
+    def log_loss_and_metrics(
+        self, mode: str, loss: torch.Tensor, y_pred: torch.Tensor, y: torch.Tensor
+    ) -> None:
+
+        if mode == "train":
+            prefix = ""
+        else:
+            prefix = f"{mode}_"
+
+        self.log(f"{prefix}loss", loss, prog_bar=True)
+        for metric in self.metrics:
+            metric_name = list(metric.keys())[0]
+            metric_value = metric[metric_name](y_pred, y)
+            self.log(f"{prefix}{metric_name}", metric_value, prog_bar=True)
+
     def training_step(
         self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int
     ) -> torch.Tensor:
@@ -145,8 +166,7 @@ class DNN(pl.LightningModule):
         x, y = batch
         y_pred = self(x)
         loss = self.loss(y_pred, y)
-        self.log("loss", loss)
-        self.log("accuracy", self.accuracy(y_pred, y), prog_bar=True)
+        self.log_loss_and_metrics("train", loss, y_pred, y)
 
         return loss
 
@@ -157,8 +177,7 @@ class DNN(pl.LightningModule):
         x, y = batch
         y_pred = self(x)
         loss = self.loss(y_pred, y)
-        self.log("val_loss", loss)
-        self.log("val_accuracy", self.accuracy(y_pred, y), prog_bar=True)
+        self.log_loss_and_metrics("val", loss, y_pred, y)
 
     def test_step(
         self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int
@@ -167,8 +186,7 @@ class DNN(pl.LightningModule):
         x, y = batch
         y_pred = self(x)
         loss = self.loss(y_pred, y)
-        self.log("test_loss", loss)
-        self.log("test_accuracy", self.accuracy(y_pred, y), prog_bar=True)
+        self.log_loss_and_metrics("test", loss, y_pred, y)
 
     def predict_step(
         self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int
@@ -245,6 +263,10 @@ if __name__ == "__main__":
         "l2_weight": 0.01,
         "epochs": 3,
     }
+    other_kwargs = {
+        "loss": nn.CrossEntropyLoss(),
+        "metrics": [{"accuracy": torchmetrics.Accuracy()}],
+    }
 
     # Load data
     train_loader, test_loader = load_MNIST(batch_size=config["batch_size"])
@@ -257,10 +279,13 @@ if __name__ == "__main__":
         num_layers=config["num_layers"],
         l2_weight=config["l2_weight"],
         optimizer=config["optimizer"],
+        loss=other_kwargs["loss"],
+        metrics=other_kwargs["metrics"],
     )
     print(model)
 
-    plot_model_with_netron(model)
+    # Plot the model
+    # plot_model_with_netron(model)
 
     # Train
     print("---------------------------------------")
@@ -269,5 +294,5 @@ if __name__ == "__main__":
 
     # Predict
     print("---------------------------------------")
-    print("Predicting...")
+    print("Predicting ...")
     predict_with_model(model, trainer, test_loader)
