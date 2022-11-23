@@ -4,7 +4,6 @@ from typing import Dict, Optional
 from ray import air, tune
 from ray.tune.schedulers import AsyncHyperBandScheduler
 from ray.tune.integration.keras import TuneReportCheckpointCallback
-from copy import deepcopy
 
 from train_MNIST import load_MNIST, DNN, train_model
 
