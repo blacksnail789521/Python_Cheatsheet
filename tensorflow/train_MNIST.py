@@ -51,6 +51,10 @@ def DNN(
     num_layers: int = 2,
     l2_weight: float = 0.01,
     optimizer: Union[str, tf.keras.optimizers.Optimizer] = "adam",
+    loss: Union[
+        str, tf.keras.losses.Loss
+    ] = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    metrics: List[Union[str, tf.keras.metrics.Metric]] = ["accuracy"],
 ) -> tf.keras.Model:
 
     assert (
@@ -93,9 +97,8 @@ def DNN(
     # Compile the model
     model.compile(
         optimizer=optimizer,
-        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        # metrics=["accuracy"],  # Same as tf.keras.metrics.SparseCategoricalAccuracy()
-        metrics=[tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")],
+        loss=loss,
+        metrics=metrics,
     )
 
     return model
@@ -166,6 +169,12 @@ if __name__ == "__main__":
         "l2_weight": 0.01,
         "epochs": 3,
     }
+    other_kwargs = {
+        "loss": tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        # Use this when you need to save the model
+        # "metrics": [tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")],
+        "metrics": ["accuracy"],  # Use this when you don't need to save the model
+    }
 
     # Load data
     train_ds, test_ds = load_MNIST(batch_size=config["batch_size"])
@@ -178,11 +187,13 @@ if __name__ == "__main__":
         num_layers=config["num_layers"],
         l2_weight=config["l2_weight"],
         optimizer=config["optimizer"],
+        loss=other_kwargs["loss"],
+        metrics=other_kwargs["metrics"],
     )
     model.summary()
 
     # Plot the model
-    plot_model_with_netron(model)
+    # plot_model_with_netron(model) # Remebmer to change the metrics
     # tf.keras.utils.plot_model(model, "model.png", show_shapes=True)
 
     # Train

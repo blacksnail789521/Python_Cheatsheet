@@ -1,12 +1,15 @@
+import tensorflow as tf
 from datetime import datetime
-from typing import Dict
+from typing import Dict, Optional
 from ray import air, tune
 from ray.tune.schedulers import AsyncHyperBandScheduler
 from ray.tune.integration.keras import TuneReportCheckpointCallback
+from copy import deepcopy
+
 from train_MNIST import load_MNIST, DNN, train_model
 
 
-def trainable(config: Dict):
+def trainable(config: Dict, other_kwargs: Optional[Dict] = None):
 
     # Load data
     train_ds, test_ds = load_MNIST(batch_size=config["batch_size"])
@@ -16,6 +19,8 @@ def trainable(config: Dict):
         num_layers=config["num_layers"],
         l2_weight=config["l2_weight"],
         optimizer=config["optimizer"],
+        loss=other_kwargs["loss"],
+        metrics=other_kwargs["metrics"],
     )
 
     # Train
@@ -36,6 +41,11 @@ def trainable(config: Dict):
 
 if __name__ == "__main__":
 
+    other_kwargs = {
+        "loss": tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        "metrics": ["accuracy"],
+    }
+
     """
     1. Define the search space (param_space)
     2. Define the search algorithm (tune_config/search_alg) # Default is RandomSearch
@@ -47,14 +57,17 @@ if __name__ == "__main__":
 
     # Pass in a Trainable class or function, along with a search space "config".
     tuner = tune.Tuner(
-        trainable=tune.with_resources(trainable, resources={"cpu": 1, "gpu": 0}),
+        trainable=tune.with_resources(
+            tune.with_parameters(trainable, other_kwargs=other_kwargs),
+            resources={"cpu": 1, "gpu": 0},
+        ),
+        # trainable=tune.with_resources(trainable, resources={"cpu": 1, "gpu": 0}),
         param_space={
             "batch_size": tune.choice([32, 64, 128, 256]),
             "optimizer": tune.choice(["adam", "Nadam", "sgd"]),
             "num_layers": tune.choice([1, 2, 3, 4]),
             "l2_weight": tune.choice([0.01, 0.001, 0.0001]),
             "epochs": tune.choice([3, 5, 10]),
-            # "epochs": tune.choice([1]),
         },
         tune_config=tune.TuneConfig(
             num_samples=10,
