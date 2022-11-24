@@ -50,7 +50,8 @@ def show_data(test_ds: tf.data.Dataset) -> None:
 def DNN(
     num_layers: int = 2,
     l2_weight: float = 0.01,
-    optimizer: Union[str, tf.keras.optimizers.Optimizer] = "adam",
+    optimizer: str = "Adam",
+    lr: float = 0.001,
     loss: Union[
         str, tf.keras.losses.Loss
     ] = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -96,7 +97,7 @@ def DNN(
 
     # Compile the model
     model.compile(
-        optimizer=optimizer,
+        optimizer=getattr(tf.keras.optimizers, optimizer)(learning_rate=lr),
         loss=loss,
         metrics=metrics,
     )
@@ -164,7 +165,8 @@ if __name__ == "__main__":
         #         staircase=True,
         #     )
         # ),
-        "optimizer": "adam",
+        "optimizer": "Adam",
+        "lr": 0.001,
         "num_layers": 2,
         "l2_weight": 0.01,
         "epochs": 3,
@@ -190,6 +192,7 @@ if __name__ == "__main__":
         num_layers=config["num_layers"],
         l2_weight=config["l2_weight"],
         optimizer=config["optimizer"],
+        lr=config["lr"],
         loss=other_kwargs["loss"],
         metrics=other_kwargs["metrics"],
     )

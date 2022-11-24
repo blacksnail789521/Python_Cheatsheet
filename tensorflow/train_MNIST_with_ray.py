@@ -18,6 +18,7 @@ def trainable(config: Dict, other_kwargs: Optional[Dict] = None) -> None:
         num_layers=config["num_layers"],
         l2_weight=config["l2_weight"],
         optimizer=config["optimizer"],
+        lr=config["lr"],
         loss=other_kwargs["loss"],
         metrics=other_kwargs["metrics"],
     )
@@ -66,7 +67,8 @@ if __name__ == "__main__":
         # trainable=tune.with_resources(trainable, resources={"cpu": 1, "gpu": 0}),
         param_space={
             "batch_size": tune.choice([32, 64, 128, 256]),
-            "optimizer": tune.choice(["adam", "Nadam", "sgd"]),
+            "optimizer": tune.choice(["Adam", "Nadam", "SGD"]),
+            "lr": tune.choice([0.01, 0.001, 0.0001]),
             "num_layers": tune.choice([1, 2, 3, 4]),
             "l2_weight": tune.choice([0.01, 0.001, 0.0001]),
             "epochs": tune.choice([3, 5, 10]),

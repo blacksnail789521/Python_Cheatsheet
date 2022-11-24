@@ -81,6 +81,7 @@ class DNN(pl.LightningModule):
         num_layers: int = 2,
         l2_weight: float = 0.01,
         optimizer: str = "Adam",
+        lr: float = 0.001,
         loss: nn.modules.loss._Loss = nn.CrossEntropyLoss(),
         metrics: List[Dict[str, torchmetrics.Metric]] = [
             {"accuracy": torchmetrics.Accuracy()}
@@ -138,7 +139,7 @@ class DNN(pl.LightningModule):
     ]:
 
         optimizer = getattr(torch.optim, self.hparams.optimizer)(
-            self.parameters(), lr=1e-3, weight_decay=self.hparams.l2_weight
+            self.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.l2_weight
         )
         scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
 
@@ -259,6 +260,7 @@ if __name__ == "__main__":
     config = {
         "batch_size": 256,
         "optimizer": "Adam",
+        "lr": 0.001,
         "num_layers": 2,
         "l2_weight": 0.01,
         "epochs": 3,
@@ -282,6 +284,7 @@ if __name__ == "__main__":
         num_layers=config["num_layers"],
         l2_weight=config["l2_weight"],
         optimizer=config["optimizer"],
+        lr=config["lr"],
         loss=other_kwargs["loss"],
         metrics=other_kwargs["metrics"],
     )
