@@ -176,6 +176,9 @@ if __name__ == "__main__":
         "metrics": ["accuracy"],  # Use this when you don't need to save the model
     }
 
+    # Set all raodom seeds (Python, NumPy, TensorFlow)
+    tf.keras.utils.set_random_seed(seed=0)
+
     # Load data
     train_ds, test_ds = load_MNIST(batch_size=config["batch_size"])
 

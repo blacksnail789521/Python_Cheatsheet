@@ -1,3 +1,4 @@
+import pytorch_lightning as pl
 from datetime import datetime
 from typing import Dict, Optional
 from ray import air, tune
@@ -43,6 +44,9 @@ if __name__ == "__main__":
         "loss": nn.CrossEntropyLoss(),
         "metrics": [{"accuracy": torchmetrics.Accuracy()}],
     }
+
+    # Set all raodom seeds (Python, NumPy, PyTorch)
+    pl.seed_everything(seed=0)
 
     """
     1. Define the search space (param_space)

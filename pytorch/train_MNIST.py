@@ -268,6 +268,9 @@ if __name__ == "__main__":
         "metrics": [{"accuracy": torchmetrics.Accuracy()}],
     }
 
+    # Set all raodom seeds (Python, NumPy, PyTorch)
+    pl.seed_everything(seed=0)
+
     # Load data
     train_loader, test_loader = load_MNIST(batch_size=config["batch_size"])
 

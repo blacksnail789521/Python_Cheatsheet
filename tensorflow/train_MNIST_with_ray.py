@@ -45,6 +45,9 @@ if __name__ == "__main__":
         "metrics": ["accuracy"],
     }
 
+    # Set all raodom seeds (Python, NumPy, TensorFlow)
+    tf.keras.utils.set_random_seed(seed=0)
+
     """
     1. Define the search space (param_space)
     2. Define the search algorithm (tune_config/search_alg) # Default is RandomSearch
