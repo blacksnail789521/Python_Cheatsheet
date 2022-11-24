@@ -42,8 +42,8 @@ def trainable(config: Dict, other_kwargs: Optional[Dict] = None) -> None:
 if __name__ == "__main__":
 
     other_kwargs = {
-        "loss": tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        "metrics": ["accuracy"],
+        "loss": "categorical_crossentropy",
+        "metrics": ["accuracy", "categorical_crossentropy"],
     }
 
     # Set all raodom seeds (Python, NumPy, TensorFlow)
@@ -64,7 +64,6 @@ if __name__ == "__main__":
             tune.with_parameters(trainable, other_kwargs=other_kwargs),
             resources={"cpu": 1, "gpu": 0},
         ),
-        # trainable=tune.with_resources(trainable, resources={"cpu": 1, "gpu": 0}),
         param_space={
             "batch_size": tune.choice([32, 64, 128, 256]),
             "optimizer": tune.choice(["Adam", "Nadam", "SGD"]),
@@ -85,7 +84,7 @@ if __name__ == "__main__":
                 # max_t=100, # (default) max epochs
                 # grace_period=1, # (default) min epochs
             ),
-            max_concurrent_trials=2,  # default = 0 (unlimited)
+            max_concurrent_trials=1,  # default = 0 (unlimited)
         ),
         run_config=air.RunConfig(
             name=f"tune_MNIST_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}",

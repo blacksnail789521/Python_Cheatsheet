@@ -13,6 +13,10 @@ def load_MNIST(batch_size: int = 256) -> Tuple[tf.data.Dataset, tf.data.Dataset]
     # Load numpy data
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
+    # One-hot encoding for y
+    # y_train = np.eye(10)[y_train]
+    # y_test = np.eye(10)[y_test]
+
     # Normalize
     x_train, x_test = x_train / 255.0, x_test / 255.0
 
@@ -43,7 +47,7 @@ def show_data(test_ds: tf.data.Dataset) -> None:
 
     # Show the first image and its label
     plt.imshow(x[0, :, :, 0], cmap="gray")
-    plt.title(f"Label: {y[0]}")
+    plt.title(f"Label: {np.argmax(y[0])}")
     plt.show()
 
 
@@ -52,10 +56,11 @@ def DNN(
     l2_weight: float = 0.01,
     optimizer: str = "Adam",
     lr: float = 0.001,
-    loss: Union[
-        str, tf.keras.losses.Loss
-    ] = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    metrics: List[Union[str, tf.keras.metrics.Metric]] = ["accuracy"],
+    loss: Union[str, tf.keras.losses.Loss] = "categorical_crossentropy",
+    metrics: List[Union[str, tf.keras.metrics.Metric]] = [
+        "accuracy",
+        "categorical_crossentropy",
+    ],
 ) -> tf.keras.Model:
 
     assert (
@@ -76,6 +81,7 @@ def DNN(
         -----------------------------------------
         
         tf.keras.layers.Dense(10),
+        tf.keras.layers.Softmax()
     ], name = model_name)
     """
 
@@ -91,6 +97,7 @@ def DNN(
     outputs = tf.keras.layers.Dense(
         10,
         kernel_regularizer=tf.keras.regularizers.l2(l2_weight),
+        activation="softmax",
     )(outputs)
 
     model = tf.keras.Model(inputs, outputs, name="DNN")
@@ -149,7 +156,7 @@ def predict_with_model(model: tf.keras.Model, test_ds: tf.data.Dataset) -> None:
     x, y = next(iter(test_ds))
     for i in range(5):
         plt.imshow(x[i, :, :, 0], cmap="gray")
-        plt.title(f"Label: {y[i]}, Prediction: {np.argmax(y_pred[i])}")
+        plt.title(f"Label: {np.argmax(y[i])}, Prediction: {np.argmax(y_pred[i])}")
         plt.show()
 
 
@@ -172,10 +179,17 @@ if __name__ == "__main__":
         "epochs": 3,
     }
     other_kwargs = {
-        "loss": tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        "loss": "categorical_crossentropy",  # one-hot encoding
+        # "loss": "sparse_categorical_crossentropy",  # label encoding
+        # label encoding w/o softmax
+        # "loss": tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        #
         # Use this when you need to save the model
         # "metrics": [tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")],
-        "metrics": ["accuracy"],  # Use this when you don't need to save the model
+        "metrics": [
+            "accuracy",
+            "categorical_crossentropy",
+        ],  # Use this when you don't need to save the model
     }
 
     # Set all raodom seeds (Python, NumPy, TensorFlow)
@@ -200,12 +214,17 @@ if __name__ == "__main__":
 
     # Plot the model
     # plot_model_with_netron(model) # Remebmer to change the metrics
-    # tf.keras.utils.plot_model(model, "model.png", show_shapes=True)
+    tf.keras.utils.plot_model(model, "model.png", show_shapes=True)
 
     # Train
     print("---------------------------------------")
     print("Training ...")
     train_model(train_ds, test_ds, model, epochs=config["epochs"])
+
+    # Evaluate
+    print("---------------------------------------")
+    print("Evaluating ...")
+    model.evaluate(test_ds)
 
     # Predict
     print("---------------------------------------")

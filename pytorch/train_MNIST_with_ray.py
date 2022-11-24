@@ -1,3 +1,5 @@
+import torchmetrics
+import torch.nn as nn
 import pytorch_lightning as pl
 from datetime import datetime
 from typing import Dict, Optional
@@ -43,7 +45,12 @@ if __name__ == "__main__":
 
     other_kwargs = {
         "loss": nn.CrossEntropyLoss(),
-        "metrics": [{"accuracy": torchmetrics.Accuracy()}],
+        "metrics": [
+            {
+                "accuracy": torchmetrics.Accuracy(),
+                "cross_entropy": nn.CrossEntropyLoss(),
+            }
+        ],
     }
 
     # Set all raodom seeds (Python, NumPy, PyTorch)
@@ -84,7 +91,7 @@ if __name__ == "__main__":
                 # max_t=100, # (default) max epochs
                 # grace_period=1, # (default) min epochs
             ),
-            max_concurrent_trials=2,  # default = 0 (unlimited)
+            max_concurrent_trials=1,  # default = 0 (unlimited)
         ),
         run_config=air.RunConfig(
             name=f"tune_MNIST_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}",

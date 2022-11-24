@@ -26,15 +26,19 @@ class MNIST_Dataset(data.Dataset):
             self.x = x_test
             self.y = y_test
 
+        # One-hot encoding for y
+        self.y = np.eye(10)[self.y]
+
+        # Normalize
+        self.x = self.x / 255.0
+
         # Add a dimension (for channel) (only for the images, a.k.a. x)
         # For pytorch, the channel dimension is the second dimension
         self.x = self.x[:, None, :, :]
 
-        # Change the image type to float32
+        # Change to correct type
         self.x = self.x.astype(np.float32)
-
-        # Normalize
-        self.x = self.x / 255.0
+        self.y = self.y.astype(np.float32)
 
     def __len__(self) -> int:
         return len(self.x)
@@ -71,7 +75,7 @@ def show_data(test_loader: data.DataLoader) -> None:
     # Show the first image and its label
     # (remember that the channel dimension is the second dimension)
     plt.imshow(x[0, 0, :, :], cmap="gray")
-    plt.title(f"Label: {y[0]}")
+    plt.title(f"Label: {np.argmax(y[0])}")
     plt.show()
 
 
@@ -83,18 +87,22 @@ class DNN(pl.LightningModule):
         optimizer: str = "Adam",
         lr: float = 0.001,
         loss: nn.modules.loss._Loss = nn.CrossEntropyLoss(),
-        metrics: List[Dict[str, torchmetrics.Metric]] = [
-            {"accuracy": torchmetrics.Accuracy()}
+        metrics: List[Dict[str, Union[torchmetrics.Metric, nn.modules.loss._Loss]]] = [
+            {
+                "accuracy": torchmetrics.Accuracy(),
+                "cross_entropy": nn.CrossEntropyLoss(),
+            }
         ],
     ) -> None:
 
         super(DNN, self).__init__()
-        assert (
-            num_layers >= 1
-        ), "We should have at least one layer because the output layer is counted."
         self.save_hyperparameters(
             ignore=["loss", "metrics"]
         )  # We can access the hyperparameters via self.hparams
+
+        assert (
+            self.hparams.num_layers >= 1
+        ), "We should have at least one layer because the output layer is counted."
 
         # Define the model
         """
@@ -108,6 +116,7 @@ class DNN(pl.LightningModule):
             -----------------------------------------
             
             nn.Linear(128, 10),
+            nn.Softmax(dim=1),
         )
         """
 
@@ -120,6 +129,7 @@ class DNN(pl.LightningModule):
             self.layers.append(nn.ReLU(inplace=True))
             current_dim = 128
         self.layers.append(nn.Linear(current_dim, 10))
+        self.layers.append(nn.Softmax(dim=1))
         self.dnn = nn.Sequential(*self.layers)
 
         # Define loss and metrics
@@ -157,7 +167,11 @@ class DNN(pl.LightningModule):
         self.log(f"{prefix}loss", loss, prog_bar=True)
         for metric in self.metrics:
             metric_name = list(metric.keys())[0]
-            metric_value = metric[metric_name](y_pred, y)
+            if metric_name == "accuracy":
+                # torchmetrics.Accuracy() can only take y in the shape of (N,)
+                metric_value = metric[metric_name](y_pred, torch.argmax(y, dim=1))
+            else:
+                metric_value = metric[metric_name](y_pred, y)
             self.log(f"{prefix}{metric_name}", metric_value, prog_bar=True)
 
     def training_step(
@@ -251,7 +265,7 @@ def predict_with_model(
     x, y = next(iter(test_loader))
     for i in range(5):
         plt.imshow(x[i, 0, :, :], cmap="gray")
-        plt.title(f"Label: {y[i]}, Prediction: {np.argmax(y_pred[i])}")
+        plt.title(f"Label: {np.argmax(y[i])}, Prediction: {np.argmax(y_pred[i])}")
         plt.show()
 
 
@@ -267,7 +281,12 @@ if __name__ == "__main__":
     }
     other_kwargs = {
         "loss": nn.CrossEntropyLoss(),
-        "metrics": [{"accuracy": torchmetrics.Accuracy()}],
+        "metrics": [
+            {
+                "accuracy": torchmetrics.Accuracy(),
+                "cross_entropy": nn.CrossEntropyLoss(),
+            }
+        ],
     }
 
     # Set all raodom seeds (Python, NumPy, PyTorch)
@@ -297,6 +316,11 @@ if __name__ == "__main__":
     print("---------------------------------------")
     print("Training ...")
     trainer = train_model(train_loader, test_loader, model, epochs=config["epochs"])
+
+    # Evaluate
+    print("---------------------------------------")
+    print("Evaluating ...")
+    trainer.test(dataloaders=test_loader)
 
     # Predict
     print("---------------------------------------")
