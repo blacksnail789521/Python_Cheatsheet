@@ -131,16 +131,14 @@ def train_model(
     additional_callbacks: List = [],
 ) -> None:
 
-    # Set callbacks (early_stopping, tensorboard, TerminateOnNaN)
-    early_stopping = tf.keras.callbacks.EarlyStopping(
-        monitor="val_loss", patience=3, mode="min", verbose=1
-    )
-    tensorboard_path = os.path.join(
-        "tensorboard", datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    )
-    os.makedirs(tensorboard_path, exist_ok=True)
-    tensorboard = tf.keras.callbacks.TensorBoard(log_dir=tensorboard_path)
-    callbacks = [early_stopping, tensorboard, tf.keras.callbacks.TerminateOnNaN()]
+    # Set callbacks (early_stopping, TerminateOnNaN)
+    # TensorBoard would be added by Ray Tune
+    callbacks = [
+        tf.keras.callbacks.EarlyStopping(
+            monitor="val_loss", patience=3, mode="min", verbose=1
+        ),
+        tf.keras.callbacks.TerminateOnNaN(),
+    ]
     callbacks.extend(additional_callbacks)
 
     # Train the model
@@ -219,7 +217,20 @@ if __name__ == "__main__":
     # Train
     print("---------------------------------------")
     print("Training ...")
-    train_model(train_ds, test_ds, model, epochs=config["epochs"])
+    tensorboard_path = os.path.join(
+        "ray_results",
+        "tune_MNIST_000",
+        "tensorboard",
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    )
+    os.makedirs(tensorboard_path, exist_ok=True)
+    train_model(
+        train_ds,
+        test_ds,
+        model,
+        epochs=config["epochs"],
+        additional_callbacks=[tf.keras.callbacks.TensorBoard(log_dir=tensorboard_path)],
+    )
 
     # Evaluate
     print("---------------------------------------")
