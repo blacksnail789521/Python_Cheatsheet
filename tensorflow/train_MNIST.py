@@ -147,7 +147,7 @@ def train_model(
     model.fit(train_ds, validation_data=test_ds, epochs=epochs, callbacks=callbacks)
 
 
-def plot_5_predictions(model: tf.keras.Model, test_ds: tf.data.Dataset) -> None:
+def plot_predictions(model: tf.keras.Model, test_ds: tf.data.Dataset) -> None:
 
     # Get all the predictions (y_pred.shape: (10000, 10))
     y_pred = model.predict(test_ds)
@@ -162,6 +162,19 @@ def plot_5_predictions(model: tf.keras.Model, test_ds: tf.data.Dataset) -> None:
 
 if __name__ == "__main__":
 
+    other_kwargs = {
+        "loss": "categorical_crossentropy",  # one-hot encoding
+        # "loss": "sparse_categorical_crossentropy",  # label encoding
+        # label encoding w/o softmax
+        # "loss": tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        #
+        # Use this when you need to save the model
+        # "metrics": [tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")],
+        "metrics": [
+            "accuracy",
+            "categorical_crossentropy",
+        ],  # Use this when you don't need to save the model
+    }
     config = {
         "batch_size": 256,
         # "optimizer": tf.keras.optimizers.Adam(
@@ -177,19 +190,6 @@ if __name__ == "__main__":
         "num_layers": 2,
         "l2_weight": 0.01,
         "epochs": 3,
-    }
-    other_kwargs = {
-        "loss": "categorical_crossentropy",  # one-hot encoding
-        # "loss": "sparse_categorical_crossentropy",  # label encoding
-        # label encoding w/o softmax
-        # "loss": tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        #
-        # Use this when you need to save the model
-        # "metrics": [tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")],
-        "metrics": [
-            "accuracy",
-            "categorical_crossentropy",
-        ],  # Use this when you don't need to save the model
     }
 
     # Set all raodom seeds (Python, NumPy, TensorFlow)
@@ -230,4 +230,4 @@ if __name__ == "__main__":
     # Predict
     print("---------------------------------------")
     print("Predicting ...")
-    plot_5_predictions(model, test_ds)
+    plot_predictions(model, test_ds)

@@ -251,7 +251,7 @@ def train_model(
     return trainer
 
 
-def plot_5_predictions(
+def plot_predictions(
     model: pl.LightningModule,
     trainer: pl.Trainer,
     test_loader: data.DataLoader,
@@ -271,14 +271,6 @@ def plot_5_predictions(
 
 if __name__ == "__main__":
 
-    config = {
-        "batch_size": 256,
-        "optimizer": "Adam",
-        "lr": 0.001,
-        "num_layers": 2,
-        "l2_weight": 0.01,
-        "epochs": 3,
-    }
     other_kwargs = {
         "loss": nn.CrossEntropyLoss(),
         "metrics": [
@@ -287,6 +279,14 @@ if __name__ == "__main__":
                 "cross_entropy": nn.CrossEntropyLoss(),
             }
         ],
+    }
+    config = {
+        "batch_size": 256,
+        "optimizer": "Adam",
+        "lr": 0.001,
+        "num_layers": 2,
+        "l2_weight": 0.01,
+        "epochs": 3,
     }
 
     # Set all raodom seeds (Python, NumPy, PyTorch)
@@ -326,4 +326,4 @@ if __name__ == "__main__":
     # Predict
     print("---------------------------------------")
     print("Predicting ...")
-    plot_5_predictions(model, trainer, test_loader)
+    plot_predictions(model, trainer, test_loader)
