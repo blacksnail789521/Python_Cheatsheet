@@ -147,7 +147,7 @@ def train_model(
     model.fit(train_ds, validation_data=test_ds, epochs=epochs, callbacks=callbacks)
 
 
-def predict_with_model(model: tf.keras.Model, test_ds: tf.data.Dataset) -> None:
+def plot_5_predictions(model: tf.keras.Model, test_ds: tf.data.Dataset) -> None:
 
     # Get all the predictions (y_pred.shape: (10000, 10))
     y_pred = model.predict(test_ds)
@@ -230,4 +230,4 @@ if __name__ == "__main__":
     # Predict
     print("---------------------------------------")
     print("Predicting ...")
-    predict_with_model(model, test_ds)
+    plot_5_predictions(model, test_ds)

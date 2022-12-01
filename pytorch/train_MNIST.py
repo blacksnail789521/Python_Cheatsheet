@@ -251,7 +251,7 @@ def train_model(
     return trainer
 
 
-def predict_with_model(
+def plot_5_predictions(
     model: pl.LightningModule,
     trainer: pl.Trainer,
     test_loader: data.DataLoader,
@@ -326,4 +326,4 @@ if __name__ == "__main__":
     # Predict
     print("---------------------------------------")
     print("Predicting ...")
-    predict_with_model(model, trainer, test_loader)
+    plot_5_predictions(model, trainer, test_loader)
