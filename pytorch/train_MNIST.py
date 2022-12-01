@@ -320,7 +320,8 @@ if __name__ == "__main__":
     # Evaluate
     print("---------------------------------------")
     print("Evaluating ...")
-    trainer.test(dataloaders=test_loader)
+    # The length of the loss_list corresponds to the number of dataloaders used.
+    loss_list = trainer.test(dataloaders=test_loader)
 
     # Predict
     print("---------------------------------------")
