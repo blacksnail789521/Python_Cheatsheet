@@ -14,8 +14,8 @@ def load_MNIST(batch_size: int = 256) -> Tuple[tf.data.Dataset, tf.data.Dataset]
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
     # One-hot encoding for y
-    # y_train = np.eye(10)[y_train]
-    # y_test = np.eye(10)[y_test]
+    y_train = np.eye(10)[y_train]
+    y_test = np.eye(10)[y_test]
 
     # Normalize
     x_train, x_test = x_train / 255.0, x_test / 255.0
@@ -110,6 +110,24 @@ def DNN(
     )
 
     return model
+
+
+def show_mode(model: tf.keras.Model) -> Tuple[str, int, int]:
+
+    # Show the model's summary
+    print("---------------------------------------")
+    model.summary()
+
+    # Get the model name and the number of params
+    model_name = model.name
+    num_trainable_params = int(
+        np.sum([np.prod(v.get_shape()) for v in model.trainable_weights])
+    )
+    num_non_trainable_params = int(
+        np.sum([np.prod(v.get_shape()) for v in model.non_trainable_weights])
+    )
+
+    return model_name, num_trainable_params, num_non_trainable_params
 
 
 def plot_model_with_netron(model: tf.keras.Model, name: str = "DNN") -> None:
@@ -208,7 +226,9 @@ if __name__ == "__main__":
         loss=other_kwargs["loss"],
         metrics=other_kwargs["metrics"],
     )
-    model.summary()
+
+    # Show the model
+    model_name, num_trainable_params, num_non_trainable_params = show_mode(model)
 
     # Plot the model
     # plot_model_with_netron(model) # Remebmer to change the metrics
