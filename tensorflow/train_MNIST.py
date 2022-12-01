@@ -225,7 +225,7 @@ if __name__ == "__main__":
     print("---------------------------------------")
     print("Evaluating ...")
     loss_dict = model.evaluate(test_ds, return_dict=True)
-    print(f"loss: {loss_dict}")
+    print(f"loss_dict: {loss_dict}")
 
     # Predict
     print("---------------------------------------")
