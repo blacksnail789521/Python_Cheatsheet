@@ -2,22 +2,53 @@ import pandas as pd
 
 
 print("----------------------")
-df = pd.DataFrame({"A": [1, 4, 7], "B": [2, 5, 8], "C": [3, 6, 9]}, \
-                  index = pd.Index(["a", "b", "c"]))
+df = pd.DataFrame(
+    {"A": [1, 4, 7], "B": [2, 5, 8], "C": [3, 6, 9]},
+    index=pd.Index(["a", "b", "c"], name="index"),
+)
 print(df)
+"""
+       A  B  C
+index         
+a      1  2  3
+b      4  5  6
+c      7  8  9
+"""
 
-# Rename column_name.
+# Rename column name
 print("----------------------")
-rename_column_name_dict = {}
-for index, column_name in enumerate(df.columns):
-    rename_column_name_dict[column_name] = column_name + str(index + 1)
-df_rename_by_column_name = df.rename(columns = rename_column_name_dict)
-print(df_rename_by_column_name)
+new_df = df.rename(columns={"A": "A1", "B": "B2", "C": "C3"})
+print(new_df)
+"""
+       A1  B2  C3
+index            
+a       1   2   3
+b       4   5   6
+c       7   8   9
+"""
 
-# Rename index_label.
+# Rename index name
 print("----------------------")
-rename_index_label_dict = {}
-for index, index_label in enumerate(df.index):
-    rename_index_label_dict[index_label] = index_label + str(index + 1)
-df_rename_by_index_label = df.rename(index = rename_index_label_dict)
-print(df_rename_by_index_label)
+new_df = df.rename_axis("new_index")
+print(new_df)
+"""
+            A  B  C
+new_index
+a           1  2  3
+b           4  5  6
+c           7  8  9
+"""
+
+# Rename index label
+print("----------------------")
+new_df = df.rename(index={"a": "a1", "b": "b2", "c": "c3"})
+print(new_df)
+"""
+       A  B  C
+index         
+a1     1  2  3
+b2     4  5  6
+c3     7  8  9
+"""
+
+print()
