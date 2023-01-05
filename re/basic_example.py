@@ -2,10 +2,14 @@ import re
 
 
 txt = "The rain in Spain"
-x = re.search("^The.*Spain$", txt) # <re.Match object; span=(0, 17), match='The rain in Spain'>
+x = re.search("^The.*Spain$", txt)
+print(x)  # <re.Match object; span=(0, 17), match='The rain in Spain'>
+
+x = re.search("in (Spain|Taiwan)$", txt)
+print(x)  # <re.Match object; span=(0, 17), match='The rain in Spain'>
 
 
-'''
+"""
 Character	Description	                                                                Example
 -----------------------------------------------------------------------------------------------
 []	        A set of characters	                                                        "[a-m]"	
@@ -19,4 +23,6 @@ $	        Ends with	                                                            
 {}	        Exactly the specified number of occurrences	                                "he.{2}o"	
 |	        Either or	                                                                "falls|stays"	
 ()	        Capture and group
-'''
+"""
+
+print()
