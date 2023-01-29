@@ -61,7 +61,7 @@ if __name__ == "__main__":
 
     # Assume we use `python argparse_example.py 3 2`
     args = parse_args()
-    pprint(vars(args))
+    pprint(vars(args))  # Treat the Namespace as a dictionary
 
     """
     {'batch_size': None,
