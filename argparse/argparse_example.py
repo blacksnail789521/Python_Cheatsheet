@@ -38,6 +38,7 @@ def parse_args() -> argparse.Namespace:
         type=str,  # list of str
         help="add element one by one",
         default=["a"],
+        choices=["a", "b", "c", "d"],
     )  # python argparse_example.py -l2 b -l2 c -l2 d
     parser.add_argument("--foo", help="foo help")
 
