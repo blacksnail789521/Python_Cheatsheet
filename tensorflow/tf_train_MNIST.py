@@ -1,54 +1,13 @@
 import tensorflow as tf
 import os
-from tensorflow.keras.datasets import mnist
 from datetime import datetime
-from typing import List, Tuple, Union
+from typing import Union
 import netron
 import matplotlib.pyplot as plt
 import numpy as np
+from ray.tune.integration.keras import TuneReportCheckpointCallback
 
-
-def load_MNIST(batch_size: int = 256) -> Tuple[tf.data.Dataset, tf.data.Dataset]:
-
-    # Load numpy data
-    (x_train, y_train), (x_test, y_test) = mnist.load_data()
-
-    # One-hot encoding for y
-    y_train = np.eye(10)[y_train]
-    y_test = np.eye(10)[y_test]
-
-    # Normalize
-    x_train, x_test = x_train / 255.0, x_test / 255.0
-
-    # Add a dimension (for channel) (only for the images, a.k.a. x)
-    x_train = x_train[:, :, :, None]
-    x_test = x_test[:, :, :, None]
-
-    # Convert to dataset
-    train_ds = (
-        tf.data.Dataset.from_tensor_slices((x_train, y_train))
-        .shuffle(10000)
-        .batch(batch_size)
-    )
-    test_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test)).batch(32)
-
-    return train_ds, test_ds
-
-
-def show_data(test_ds: tf.data.Dataset) -> None:
-
-    # Get the first batch
-    x, y = next(iter(test_ds))
-    x, y = x.numpy(), y.numpy()
-
-    # Show the shape
-    print(f"x.shape: {x.shape}")
-    print(f"y.shape: {y.shape}")
-
-    # Show the first image and its label
-    plt.imshow(x[0, :, :, 0], cmap="gray")
-    plt.title(f"Label: {np.argmax(y[0])}")
-    plt.show()
+from tf_load_MNIST import load_MNIST, show_data
 
 
 def DNN(
@@ -57,12 +16,11 @@ def DNN(
     optimizer: str = "Adam",
     lr: float = 0.001,
     loss: Union[str, tf.keras.losses.Loss] = "categorical_crossentropy",
-    metrics: List[Union[str, tf.keras.metrics.Metric]] = [
+    metrics: list[Union[str, tf.keras.metrics.Metric]] = [
         "accuracy",
         "categorical_crossentropy",
     ],
 ) -> tf.keras.Model:
-
     assert (
         num_layers >= 1
     ), "We should have at least one layer because the output layer is counted."
@@ -112,8 +70,7 @@ def DNN(
     return model
 
 
-def show_mode(model: tf.keras.Model) -> Tuple[str, int, int]:
-
+def show_model(model: tf.keras.Model) -> dict[str, int]:
     # Show the model's summary
     print("---------------------------------------")
     model.summary()
@@ -127,11 +84,14 @@ def show_mode(model: tf.keras.Model) -> Tuple[str, int, int]:
         np.sum([np.prod(v.get_shape()) for v in model.non_trainable_weights])
     )
 
-    return model_name, num_trainable_params, num_non_trainable_params
+    return {
+        "model_name": model_name,
+        "num_trainable_params": num_trainable_params,
+        "num_non_trainable_params": num_non_trainable_params,
+    }
 
 
 def plot_model_with_netron(model: tf.keras.Model, name: str = "DNN") -> None:
-
     # Save the model
     model_path = os.path.join("models", f"{name}.h5")  # Only support .h5
     os.makedirs(os.path.dirname(model_path), exist_ok=True)
@@ -146,9 +106,8 @@ def train_model(
     test_ds: tf.data.Dataset,
     model: tf.keras.Model,
     epochs: int = 3,
-    additional_callbacks: List = [],
+    additional_callbacks: list = [],
 ) -> None:
-
     # Set callbacks (early_stopping, TerminateOnNaN)
     # TensorBoard would be added by Ray Tune
     callbacks = [
@@ -164,7 +123,6 @@ def train_model(
 
 
 def plot_predictions(model: tf.keras.Model, test_ds: tf.data.Dataset) -> None:
-
     # Get all the predictions (y_pred.shape: (10000, 10))
     y_pred = model.predict(test_ds)
 
@@ -172,24 +130,87 @@ def plot_predictions(model: tf.keras.Model, test_ds: tf.data.Dataset) -> None:
     x, y = next(iter(test_ds))
     for i in range(5):
         plt.imshow(x[i, :, :, 0], cmap="gray")
-        plt.title(f"Label: {np.argmax(y[i])}, Prediction: {np.argmax(y_pred[i])}")
+        plt.title(f"Label: {y[i]}, Prediction: {np.argmax(y_pred[i])}")
         plt.show()
 
 
-if __name__ == "__main__":
+def trainable(config: dict, other_kwargs: dict, ray_tune: bool = True) -> None:
 
+    # Load data
+    train_ds, test_ds = load_MNIST(batch_size=config["batch_size"])
+    if not ray_tune:
+        show_data(test_ds)  # Show the data
+
+    # Get the model
+    model = DNN(
+        num_layers=config["num_layers"],
+        l2_weight=config["l2_weight"],
+        optimizer=config["optimizer"],
+        lr=config["lr"],
+        loss=other_kwargs["loss"],
+        metrics=other_kwargs["metrics"],
+    )
+    if not ray_tune:
+        _ = show_model(model)  # Show the model
+
+        # Plot the model
+        # plot_model_with_netron(model)
+        tf.keras.utils.plot_model(model, "model.png", show_shapes=True)
+
+    # Determine additional_callbacks
+    additional_callbacks = []
+    if not ray_tune:
+        tensorboard_path = os.path.join(
+            "ray_results",
+            "tune_MNIST_000",
+            "tensorboard",
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        )
+        os.makedirs(tensorboard_path, exist_ok=True)
+        additional_callbacks.append(
+            tf.keras.callbacks.TensorBoard(log_dir=tensorboard_path)
+        )
+    else:
+        additional_callbacks.append(
+            TuneReportCheckpointCallback(
+                # metrics={"val_loss": "val_loss", "val_accuracy": "val_accuracy"},
+                metrics=["val_loss", "val_accuracy"],
+                # filename="checkpoint", # (default)
+            )
+        )
+
+    # Train
+    print("---------------------------------------")
+    print("Training ...")
+    train_model(
+        train_ds,
+        test_ds,
+        model,
+        epochs=config["epochs"],
+        additional_callbacks=additional_callbacks,
+    )
+
+    if not ray_tune:
+        # Evaluate
+        print("---------------------------------------")
+        print("Evaluating ...")
+        loss_dict = model.evaluate(test_ds, return_dict=True)
+        print(f"loss_dict: {loss_dict}")
+
+        # Predict
+        print("---------------------------------------")
+        print("Predicting ...")
+        plot_predictions(model, test_ds)
+
+
+if __name__ == "__main__":
     other_kwargs = {
-        "loss": "categorical_crossentropy",  # one-hot encoding
-        # "loss": "sparse_categorical_crossentropy",  # label encoding
+        # "loss": "categorical_crossentropy",  # one-hot encoding
+        "loss": "sparse_categorical_crossentropy",  # label encoding
         # label encoding w/o softmax
         # "loss": tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
         #
-        # Use this when you need to save the model
-        # "metrics": [tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")],
-        "metrics": [
-            "accuracy",
-            "categorical_crossentropy",
-        ],  # Use this when you don't need to save the model
+        "metrics": ["accuracy"],
     }
     config = {
         "batch_size": 256,
@@ -203,7 +224,7 @@ if __name__ == "__main__":
         # ),
         "optimizer": "Adam",
         "lr": 0.001,
-        "num_layers": 2,
+        "num_layers": 3,
         "l2_weight": 0.01,
         "epochs": 3,
     }
@@ -211,54 +232,4 @@ if __name__ == "__main__":
     # Set all raodom seeds (Python, NumPy, TensorFlow)
     tf.keras.utils.set_random_seed(seed=0)
 
-    # Load data
-    train_ds, test_ds = load_MNIST(batch_size=config["batch_size"])
-
-    # Show the data
-    show_data(test_ds)
-
-    # Get the model
-    model = DNN(
-        num_layers=config["num_layers"],
-        l2_weight=config["l2_weight"],
-        optimizer=config["optimizer"],
-        lr=config["lr"],
-        loss=other_kwargs["loss"],
-        metrics=other_kwargs["metrics"],
-    )
-
-    # Show the model
-    model_name, num_trainable_params, num_non_trainable_params = show_mode(model)
-
-    # Plot the model
-    # plot_model_with_netron(model) # Remebmer to change the metrics
-    tf.keras.utils.plot_model(model, "model.png", show_shapes=True)
-
-    # Train
-    print("---------------------------------------")
-    print("Training ...")
-    tensorboard_path = os.path.join(
-        "ray_results",
-        "tune_MNIST_000",
-        "tensorboard",
-        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-    )
-    os.makedirs(tensorboard_path, exist_ok=True)
-    train_model(
-        train_ds,
-        test_ds,
-        model,
-        epochs=config["epochs"],
-        additional_callbacks=[tf.keras.callbacks.TensorBoard(log_dir=tensorboard_path)],
-    )
-
-    # Evaluate
-    print("---------------------------------------")
-    print("Evaluating ...")
-    loss_dict = model.evaluate(test_ds, return_dict=True)
-    print(f"loss_dict: {loss_dict}")
-
-    # Predict
-    print("---------------------------------------")
-    print("Predicting ...")
-    plot_predictions(model, test_ds)
+    trainable(config, other_kwargs, ray_tune=False)

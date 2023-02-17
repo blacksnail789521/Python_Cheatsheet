@@ -1,49 +1,24 @@
 import tensorflow as tf
 from datetime import datetime
-from typing import Dict, Optional
 from ray import air, tune
 from ray.tune.schedulers import AsyncHyperBandScheduler
-from ray.tune.integration.keras import TuneReportCheckpointCallback
 
-from train_MNIST import load_MNIST, DNN, train_model
-
-
-def trainable(config: Dict, other_kwargs: Optional[Dict] = None) -> None:
-
-    # Load data
-    train_ds, test_ds = load_MNIST(batch_size=config["batch_size"])
-
-    # Get the model
-    model = DNN(
-        num_layers=config["num_layers"],
-        l2_weight=config["l2_weight"],
-        optimizer=config["optimizer"],
-        lr=config["lr"],
-        loss=other_kwargs["loss"],
-        metrics=other_kwargs["metrics"],
-    )
-
-    # Train
-    train_model(
-        train_ds,
-        test_ds,
-        model,
-        epochs=config["epochs"],
-        additional_callbacks=[
-            TuneReportCheckpointCallback(
-                # metrics={"val_loss": "val_loss", "val_accuracy": "val_accuracy"},
-                metrics=["val_loss", "val_accuracy"],
-                # filename="checkpoint", # (default)
-            )
-        ],
-    )
+from tf_train_MNIST import trainable
 
 
 if __name__ == "__main__":
 
     other_kwargs = {
-        "loss": "categorical_crossentropy",
-        "metrics": ["accuracy", "categorical_crossentropy"],
+        "loss": "sparse_categorical_crossentropy",
+        "metrics": ["accuracy"],
+    }
+    param_space = {
+        "batch_size": tune.choice([32, 64, 128, 256]),
+        "optimizer": tune.choice(["Adam", "Nadam", "SGD"]),
+        "lr": tune.choice([0.01, 0.001, 0.0001]),
+        "num_layers": tune.choice([1, 2, 3, 4]),
+        "l2_weight": tune.choice([0.01, 0.001, 0.0001]),
+        "epochs": tune.choice([3, 5, 10]),
     }
 
     # Set all raodom seeds (Python, NumPy, TensorFlow)
@@ -62,18 +37,11 @@ if __name__ == "__main__":
     tuner = tune.Tuner(
         trainable=tune.with_resources(
             tune.with_parameters(trainable, other_kwargs=other_kwargs),
-            resources={"cpu": 1, "gpu": 0},
+            resources={"cpu": 32, "gpu": 0},
         ),
-        param_space={
-            "batch_size": tune.choice([32, 64, 128, 256]),
-            "optimizer": tune.choice(["Adam", "Nadam", "SGD"]),
-            "lr": tune.choice([0.01, 0.001, 0.0001]),
-            "num_layers": tune.choice([1, 2, 3, 4]),
-            "l2_weight": tune.choice([0.01, 0.001, 0.0001]),
-            "epochs": tune.choice([3, 5, 10]),
-        },
+        param_space=param_space,
         tune_config=tune.TuneConfig(
-            num_samples=10,
+            num_samples=5,
             # metric="val_loss",
             # mode="min",
             metric="val_accuracy",
