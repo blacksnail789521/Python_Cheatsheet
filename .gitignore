@@ -5,3 +5,4 @@ ray_results/
 models/
 model.png
 lightning_logs/
+MNIST/

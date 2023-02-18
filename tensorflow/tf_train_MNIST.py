@@ -21,6 +21,7 @@ def DNN(
         "categorical_crossentropy",
     ],
 ) -> tf.keras.Model:
+
     assert (
         num_layers >= 1
     ), "We should have at least one layer because the output layer is counted."
@@ -139,7 +140,7 @@ def trainable(config: dict, other_kwargs: dict, ray_tune: bool = True) -> None:
     # Load data
     train_ds, test_ds = load_MNIST(batch_size=config["batch_size"])
     if not ray_tune:
-        show_data(test_ds)  # Show the data
+        show_data(train_ds)  # Show the data
 
     # Get the model
     model = DNN(
@@ -157,7 +158,7 @@ def trainable(config: dict, other_kwargs: dict, ray_tune: bool = True) -> None:
         # plot_model_with_netron(model)
         tf.keras.utils.plot_model(model, "model.png", show_shapes=True)
 
-    # Determine additional_callbacks
+    # Determine additional_callbacks (for logging/plotting purposes only)
     additional_callbacks = []
     if not ray_tune:
         tensorboard_path = os.path.join(
