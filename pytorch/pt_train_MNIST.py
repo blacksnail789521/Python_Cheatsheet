@@ -26,7 +26,6 @@ class DNN(pl.LightningModule):
             "cross_entropy": nn.CrossEntropyLoss(),
         },
     ) -> None:
-
         super(DNN, self).__init__()
         self.save_hyperparameters(
             ignore=["loss", "metrics"]
@@ -64,7 +63,9 @@ class DNN(pl.LightningModule):
             self.layers.append(nn.ReLU(inplace=True))
             current_dim = 128
         self.layers.append(nn.Linear(current_dim, 10))
-        self.layers.append(nn.Softmax(dim=1))
+        # self.layers.append(nn.Softmax(dim=1))
+        # We don't need to use this because nn.CrossEntropyLoss() already includes softmax
+        # Also, BCEWithLogitsLoss = Sigmoid + BCELoss
         self.dnn = nn.Sequential(*self.layers)
 
         # Define loss and metrics
@@ -207,7 +208,6 @@ def plot_predictions(
 
 
 def trainable(config: dict, other_kwargs: dict, ray_tune: bool = True) -> None:
-
     # Load data
     train_loader, test_loader = load_MNIST(batch_size=config["batch_size"])
     if not ray_tune:
@@ -268,7 +268,6 @@ def trainable(config: dict, other_kwargs: dict, ray_tune: bool = True) -> None:
 
 
 if __name__ == "__main__":
-
     other_kwargs = {
         "loss": nn.CrossEntropyLoss(),
         "metrics": {
