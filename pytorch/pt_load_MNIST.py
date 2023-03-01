@@ -85,10 +85,10 @@ def load_MNIST(
         "num_workers": num_workers,
         "persistent_workers": True,
     }
-    train_loader = DataLoader(train_ds, shuffle=True, **loader_config)
-    test_loader = DataLoader(test_ds, shuffle=False, **loader_config)
+    train_dl = DataLoader(train_ds, shuffle=True, **loader_config)
+    test_dl = DataLoader(test_ds, shuffle=False, **loader_config)
 
-    return train_loader, test_loader
+    return train_dl, test_dl
 
 
 def show_data(dataloader: DataLoader) -> None:
@@ -109,7 +109,7 @@ def show_data(dataloader: DataLoader) -> None:
 
 if __name__ == "__main__":
     # Load data
-    train_ds, test_ds = load_MNIST(batch_size=256, use_numpy=False)
+    train_dl, test_dl = load_MNIST(batch_size=256, use_numpy=False)
 
     # Show the data
-    show_data(train_ds)
+    show_data(train_dl)

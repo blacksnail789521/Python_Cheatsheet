@@ -145,8 +145,8 @@ def plot_model_with_netron(model: nn.Module, name: str = "DNN") -> None:
 
 
 def train_model(
-    train_loader: data.DataLoader,
-    test_loader: data.DataLoader,
+    train_dl: data.DataLoader,
+    test_dl: data.DataLoader,
     model: pl.LightningModule,
     epochs: int = 3,
     additional_callbacks: list = [],
@@ -185,7 +185,7 @@ def train_model(
     )
 
     # Train the model
-    trainer.fit(model, train_loader, test_loader)
+    trainer.fit(model, train_dl, test_dl)
 
     return trainer
 
@@ -193,14 +193,14 @@ def train_model(
 def plot_predictions(
     model: pl.LightningModule,
     trainer: pl.Trainer,
-    test_loader: data.DataLoader,
+    test_dl: data.DataLoader,
 ) -> None:
     # Get all the predictions (y_pred_list[0].shape: (32, 10))
-    y_pred_list = trainer.predict(model, dataloaders=test_loader)
+    y_pred_list = trainer.predict(model, dataloaders=test_dl)
     y_pred = y_pred_list[0]  # Extract the first batch
 
     # Show the first 5 predictions
-    x, y = next(iter(test_loader))
+    x, y = next(iter(test_dl))
     for i in range(5):
         plt.imshow(x[i, 0, :, :], cmap="gray")
         plt.title(f"Label: {y[i]}, Prediction: {np.argmax(y_pred[i])}")
@@ -209,9 +209,9 @@ def plot_predictions(
 
 def trainable(config: dict, other_kwargs: dict, ray_tune: bool = True) -> None:
     # Load data
-    train_loader, test_loader = load_MNIST(batch_size=config["batch_size"])
+    train_dl, test_dl = load_MNIST(batch_size=config["batch_size"])
     if not ray_tune:
-        show_data(train_loader)  # Show the data
+        show_data(train_dl)  # Show the data
 
     # Get the model
     model = DNN(
@@ -246,8 +246,8 @@ def trainable(config: dict, other_kwargs: dict, ray_tune: bool = True) -> None:
     print("---------------------------------------")
     print("Training ...")
     trainer = train_model(
-        train_loader,
-        test_loader,
+        train_dl,
+        test_dl,
         model,
         epochs=config["epochs"],
         additional_callbacks=additional_callbacks,
@@ -259,12 +259,12 @@ def trainable(config: dict, other_kwargs: dict, ray_tune: bool = True) -> None:
         print("---------------------------------------")
         print("Evaluating ...")
         # The length of the loss_list corresponds to the number of dataloaders used.
-        loss_list = trainer.test(dataloaders=test_loader)
+        loss_list = trainer.test(dataloaders=test_dl)
 
         # Predict
         print("---------------------------------------")
         print("Predicting ...")
-        plot_predictions(model, trainer, test_loader)
+        plot_predictions(model, trainer, test_dl)
 
 
 if __name__ == "__main__":
