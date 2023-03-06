@@ -21,7 +21,7 @@ if __name__ == "__main__":
         "epochs": tune.choice([3, 5, 10]),
     }
 
-    # Set all raodom seeds (Python, NumPy, TensorFlow)
+    # Set all random seeds (Python, NumPy, TensorFlow)
     tf.keras.utils.set_random_seed(seed=0)
 
     """

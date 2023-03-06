@@ -21,7 +21,6 @@ def DNN(
         "categorical_crossentropy",
     ],
 ) -> tf.keras.Model:
-
     assert (
         num_layers >= 1
     ), "We should have at least one layer because the output layer is counted."
@@ -136,7 +135,6 @@ def plot_predictions(model: tf.keras.Model, test_ds: tf.data.Dataset) -> None:
 
 
 def trainable(config: dict, other_kwargs: dict, ray_tune: bool = True) -> None:
-
     # Load data
     train_ds, test_ds = load_MNIST(batch_size=config["batch_size"])
     if not ray_tune:
@@ -192,11 +190,11 @@ def trainable(config: dict, other_kwargs: dict, ray_tune: bool = True) -> None:
     )
 
     if not ray_tune:
-        # Evaluate
+        # Test
         print("---------------------------------------")
-        print("Evaluating ...")
-        loss_dict = model.evaluate(test_ds, return_dict=True)
-        print(f"loss_dict: {loss_dict}")
+        print("Testing ...")
+        test_loss_dict = model.evaluate(test_ds, return_dict=True)
+        print(f"test_loss_dict: {test_loss_dict}")
 
         # Predict
         print("---------------------------------------")
@@ -230,7 +228,7 @@ if __name__ == "__main__":
         "epochs": 3,
     }
 
-    # Set all raodom seeds (Python, NumPy, TensorFlow)
+    # Set all random seeds (Python, NumPy, TensorFlow)
     tf.keras.utils.set_random_seed(seed=0)
 
     trainable(config, other_kwargs, ray_tune=False)
