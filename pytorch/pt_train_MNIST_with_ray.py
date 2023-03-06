@@ -28,7 +28,7 @@ if __name__ == "__main__":
         "epochs": tune.choice([3, 5, 10]),
     }
 
-    # Set all raodom seeds (Python, NumPy, PyTorch)
+    # Set all random seeds (Python, NumPy, PyTorch)
     pl.seed_everything(seed=0)
 
     """

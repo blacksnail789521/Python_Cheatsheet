@@ -5,6 +5,7 @@ from torchvision.datasets import MNIST
 from torchvision import transforms
 import matplotlib.pyplot as plt
 import numpy as np
+import multiprocessing
 
 
 class MNIST_Dataset(Dataset):
@@ -47,7 +48,6 @@ def load_MNIST(
     one_hot: bool = False,
     batch_size: int = 256,
     use_numpy: bool = False,
-    num_workers: int = 32,
 ) -> tuple[DataLoader, DataLoader]:
     if use_numpy:
         # from tensorflow.keras.datasets import mnist
@@ -80,13 +80,13 @@ def load_MNIST(
         )
 
     # Get loader
-    loader_config = {
+    dl_config = {
         "batch_size": batch_size,
-        "num_workers": num_workers,
+        "num_workers": multiprocessing.cpu_count(),
         "persistent_workers": True,
     }
-    train_dl = DataLoader(train_ds, shuffle=True, **loader_config)
-    test_dl = DataLoader(test_ds, shuffle=False, **loader_config)
+    train_dl = DataLoader(train_ds, shuffle=True, **dl_config)
+    test_dl = DataLoader(test_ds, shuffle=False, **dl_config)
 
     return train_dl, test_dl
 

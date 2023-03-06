@@ -1,10 +1,11 @@
 import torch
 import torch.nn as nn
-from torch.utils import data
+from torch.utils.data import DataLoader
 import os
 import netron
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 import torchmetrics
 import numpy as np
 from datetime import datetime
@@ -145,8 +146,8 @@ def plot_model_with_netron(model: nn.Module, name: str = "DNN") -> None:
 
 
 def train_model(
-    train_dl: data.DataLoader,
-    test_dl: data.DataLoader,
+    train_dl: DataLoader,
+    test_dl: DataLoader,
     model: pl.LightningModule,
     epochs: int = 3,
     additional_callbacks: list = [],
@@ -154,10 +155,17 @@ def train_model(
 ) -> pl.Trainer:
     # Set callbacks
     # (We don't need to set the tensorboard logger because it is set by default)
-    early_stopping_with_TerminateOnNaN = pl.callbacks.EarlyStopping(
-        monitor="val_loss", patience=3, mode="min", verbose=True, check_finite=True
+    model_checkpoint = ModelCheckpoint(
+        monitor="val_loss",
+        mode="min",
+        filename="{epoch:02d}-{val_loss:.4f}",
+        save_top_k=-1,  # save all models
+        save_weights_only=True,
     )
-    callbacks = [early_stopping_with_TerminateOnNaN]
+    early_stopping_with_TerminateOnNaN = EarlyStopping(
+        monitor="val_loss", mode="min", patience=3, verbose=True
+    )
+    callbacks = [model_checkpoint, early_stopping_with_TerminateOnNaN]
     callbacks.extend(additional_callbacks)
 
     # Set trainer
@@ -172,14 +180,14 @@ def train_model(
         device_config["accelerator"] = "cpu"
     else:
         device_config["accelerator"] = "gpu"
-        device_config["devices"] = [0, 1, 2, 3]
+        device_config["devices"] = [0, 1, 2, 3]  # We have 4 GPUs
         device_config[
             "strategy"
         ] = "ddp_find_unused_parameters_false"  # Allow to have unused parameters
     trainer = pl.Trainer(
         default_root_dir=default_root_dir,
         max_epochs=epochs,
-        log_every_n_steps=1,  # default: 50
+        log_every_n_steps=50,  # default: 50
         callbacks=callbacks,
         **device_config,
     )
@@ -190,10 +198,37 @@ def train_model(
     return trainer
 
 
+def test_model(
+    model: pl.LightningModule,
+    trainer: pl.Trainer,
+    test_dl: DataLoader,
+) -> dict:
+    """
+    # Method 1: don't pass the model so that the best model is automatically loaded
+    loss_list = trainer.test(dataloaders=test_dl)
+
+    # Method 2: pass the model and specify the ckpt_path
+    loss_list = trainer.test(model, test_dl, ckpt_path="best")
+
+    # Method 3: load the best model manually, and then pass it to the trainer
+    model.load_state_dict(
+        torch.load(trainer.checkpoint_callback.best_model_path)["state_dict"]
+    )
+    loss_list = trainer.test(model, test_dl)
+    """
+    # Test the model
+    loss_list = trainer.test(model, test_dl, ckpt_path="best")
+
+    # The length of the loss_list corresponds to the number of dataloaders used.
+    test_loss_dict = loss_list[0]
+
+    return test_loss_dict
+
+
 def plot_predictions(
     model: pl.LightningModule,
     trainer: pl.Trainer,
-    test_dl: data.DataLoader,
+    test_dl: DataLoader,
 ) -> None:
     # Get all the predictions (y_pred_list[0].shape: (32, 10))
     y_pred_list = trainer.predict(model, dataloaders=test_dl)
@@ -255,11 +290,10 @@ def trainable(config: dict, other_kwargs: dict, ray_tune: bool = True) -> None:
     )
 
     if not ray_tune:
-        # Evaluate
+        # Test
         print("---------------------------------------")
-        print("Evaluating ...")
-        # The length of the loss_list corresponds to the number of dataloaders used.
-        loss_list = trainer.test(dataloaders=test_dl)
+        print("Testing ...")
+        test_loss = test_model(model, trainer, test_dl)
 
         # Predict
         print("---------------------------------------")
@@ -285,7 +319,7 @@ if __name__ == "__main__":
         "epochs": 3,
     }
 
-    # Set all raodom seeds (Python, NumPy, PyTorch)
+    # Set all random seeds (Python, NumPy, PyTorch)
     pl.seed_everything(seed=0)
 
     trainable(config, other_kwargs, ray_tune=False)
