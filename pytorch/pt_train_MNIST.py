@@ -12,6 +12,7 @@ from datetime import datetime
 from ray.tune.integration.pytorch_lightning import TuneReportCheckpointCallback
 
 from pt_load_MNIST import load_MNIST, show_data
+from pt_load_MNIST_DataModule import MNIST_DataModule
 
 
 class DNN(pl.LightningModule):
@@ -31,12 +32,9 @@ class DNN(pl.LightningModule):
         self.save_hyperparameters(
             ignore=["loss", "metrics"]
         )  # We can access the hyperparameters via self.hparams
-        self.l2_weight = l2_weight
-        self.optimizer = optimizer
-        self.lr = lr
 
         assert (
-            num_layers >= 1
+            self.hparams.num_layers >= 1
         ), "We should have at least one layer because the output layer is counted."
 
         # Define the model
@@ -58,7 +56,7 @@ class DNN(pl.LightningModule):
         self.layers = []
         self.layers.append(nn.Flatten())
         current_dim = 28 * 28
-        for _ in range(num_layers - 1):
+        for _ in range(self.hparams.num_layers - 1):
             self.layers.append(nn.Linear(current_dim, 128))
             self.layers.append(nn.BatchNorm1d(128))
             self.layers.append(nn.ReLU(inplace=True))
@@ -83,8 +81,8 @@ class DNN(pl.LightningModule):
     ) -> tuple[
         list[torch.optim.Optimizer], list[torch.optim.lr_scheduler._LRScheduler]
     ]:
-        optimizer = getattr(torch.optim, self.optimizer)(
-            self.parameters(), lr=self.lr, weight_decay=self.l2_weight
+        optimizer = getattr(torch.optim, self.hparams.optimizer)(
+            self.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.l2_weight
         )
         scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
 
@@ -147,25 +145,32 @@ def plot_model_with_netron(model: nn.Module, name: str = "DNN") -> None:
 
 def train_model(
     train_dl: DataLoader,
-    test_dl: DataLoader,
+    val_dl: DataLoader,
     model: pl.LightningModule,
     epochs: int = 3,
+    enable_checkpointing: bool = True,
+    enable_logging: bool = True,
     additional_callbacks: list = [],
     use_gpu: bool = False,
 ) -> pl.Trainer:
     # Set callbacks
+    callbacks = []
     # (We don't need to set the tensorboard logger because it is set by default)
-    model_checkpoint = ModelCheckpoint(
-        monitor="val_loss",
-        mode="min",
-        filename="{epoch:02d}-{val_loss:.4f}",
-        save_top_k=-1,  # save all models
-        save_weights_only=True,
-    )
+    if enable_checkpointing:
+        # We don't want to use the default one because it doesn't save all models
+        # We need to save all models because we want to use the best model for the test set
+        model_checkpoint = ModelCheckpoint(
+            monitor="val_loss",
+            mode="min",
+            filename="{epoch:02d}-{val_loss:.4f}",
+            save_top_k=-1,  # save all models
+            save_weights_only=True,
+        )
+        callbacks.append(model_checkpoint)
     early_stopping_with_TerminateOnNaN = EarlyStopping(
         monitor="val_loss", mode="min", patience=3, verbose=True
     )
-    callbacks = [model_checkpoint, early_stopping_with_TerminateOnNaN]
+    callbacks.append(early_stopping_with_TerminateOnNaN)
     callbacks.extend(additional_callbacks)
 
     # Set trainer
@@ -189,11 +194,14 @@ def train_model(
         max_epochs=epochs,
         log_every_n_steps=50,  # default: 50
         callbacks=callbacks,
+        enable_checkpointing=enable_checkpointing,
+        logger=enable_logging,
+        # We don't need to save the model because we use ModelCheckpoint
         **device_config,
     )
 
     # Train the model
-    trainer.fit(model, train_dl, test_dl)
+    trainer.fit(model, train_dl, val_dl)
 
     return trainer
 
@@ -242,9 +250,23 @@ def plot_predictions(
         plt.show()
 
 
-def trainable(config: dict, other_kwargs: dict, ray_tune: bool = True) -> None:
+def trainable(
+    config: dict,
+    other_kwargs: dict,
+    ray_tune: bool = True,
+    use_lightning_data_module: bool = True,
+) -> None:
     # Load data
-    train_dl, test_dl = load_MNIST(batch_size=config["batch_size"])
+    if not use_lightning_data_module:
+        train_dl, test_dl = load_MNIST(batch_size=config["batch_size"])
+        val_dl = test_dl
+    else:
+        dm = MNIST_DataModule(batch_size=256, split=0.8)
+        dm.prepare_data()
+        dm.setup()
+        train_dl = dm.train_dataloader()
+        val_dl = dm.val_dataloader()
+        test_dl = dm.test_dataloader()
     if not ray_tune:
         show_data(train_dl)  # Show the data
 
@@ -282,10 +304,13 @@ def trainable(config: dict, other_kwargs: dict, ray_tune: bool = True) -> None:
     print("Training ...")
     trainer = train_model(
         train_dl,
-        test_dl,
+        val_dl,
         model,
         epochs=config["epochs"],
         additional_callbacks=additional_callbacks,
+        enable_checkpointing=not ray_tune,
+        enable_logging=not ray_tune,
+        # TuneReportCheckpointCallback will handle checkpointing and logging
         use_gpu=other_kwargs["use_gpu"],
     )
 

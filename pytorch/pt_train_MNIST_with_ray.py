@@ -2,10 +2,9 @@ import torchmetrics
 import torch.nn as nn
 import pytorch_lightning as pl
 from datetime import datetime
-from typing import Dict, Optional
 from ray import air, tune
 from ray.tune.schedulers import AsyncHyperBandScheduler
-from ray.tune.integration.pytorch_lightning import TuneReportCheckpointCallback
+import multiprocessing
 
 from pt_train_MNIST import trainable
 
@@ -44,7 +43,7 @@ if __name__ == "__main__":
     tuner = tune.Tuner(
         trainable=tune.with_resources(
             tune.with_parameters(trainable, other_kwargs=other_kwargs),
-            resources={"cpu": 32, "gpu": 0},
+            resources={"cpu": multiprocessing.cpu_count(), "gpu": 0},
         ),
         param_space=param_space,
         tune_config=tune.TuneConfig(
