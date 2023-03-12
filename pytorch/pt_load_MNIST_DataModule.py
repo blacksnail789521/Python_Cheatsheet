@@ -35,35 +35,30 @@ class MNIST_DataModule(pl.LightningDataModule):
     def setup(self, stage: str = None) -> None:
         # Assign train/val datasets for use in dataloaders
         if stage == "fit" or stage is None:
-            mnist_full = MNIST(self.data_dir, train=True, transform=self.transform)
-            self.train_size = int(self.hparams.split * len(mnist_full))
-            self.val_size = len(mnist_full) - self.train_size
-            self.mnist_train, self.mnist_val = torch.utils.data.random_split(
-                mnist_full, [self.train_size, self.val_size]
+            ds = MNIST(self.data_dir, train=True, transform=self.transform)
+            self.train_size = int(self.hparams.split * len(ds))
+            self.val_size = len(ds) - self.train_size
+            self.ds_train, self.ds_val = torch.utils.data.random_split(
+                ds, [self.train_size, self.val_size]
             )
 
         # Assign test dataset for use in dataloader(s)
-        if stage == "test" or stage is None:
-            self.mnist_test = MNIST(
-                self.data_dir, train=False, transform=self.transform
-            )
-
-        if stage == "predict" or stage is None:
-            self.mnist_predict = MNIST(
+        if stage in ["test", "predict"] or stage is None:
+            self.ds_test = MNIST(
                 self.data_dir, train=False, transform=self.transform
             )
 
     def train_dataloader(self) -> DataLoader:
-        return DataLoader(self.mnist_train, shuffle=True, **self.dl_config)
+        return DataLoader(self.ds_train, shuffle=True, **self.dl_config)
 
     def val_dataloader(self) -> DataLoader:
-        return DataLoader(self.mnist_val, shuffle=False, **self.dl_config)
+        return DataLoader(self.ds_val, shuffle=False, **self.dl_config)
 
     def test_dataloader(self) -> DataLoader:
-        return DataLoader(self.mnist_test, shuffle=False, **self.dl_config)
+        return DataLoader(self.ds_test, shuffle=False, **self.dl_config)
 
     def predict_dataloader(self) -> DataLoader:
-        return DataLoader(self.mnist_predict, shuffle=False, **self.dl_config)
+        return DataLoader(self.ds_test, shuffle=False, **self.dl_config)
 
 
 def show_data(dataloader: DataLoader) -> None:
