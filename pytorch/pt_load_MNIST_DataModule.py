@@ -1,15 +1,17 @@
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, random_split
 import os
 from torchvision.datasets import MNIST
 from torchvision import transforms
 import matplotlib.pyplot as plt
 import numpy as np
 import multiprocessing
-import pytorch_lightning as pl
+import pytorch_lightning as L
+
+# import lightning as L
 
 
-class MNIST_DataModule(pl.LightningDataModule):
+class MNIST_DataModule(L.LightningDataModule):
     def __init__(
         self, data_dir: str = "./", batch_size: int = 256, split: float = 0.8
     ) -> None:
@@ -32,21 +34,19 @@ class MNIST_DataModule(pl.LightningDataModule):
         MNIST(self.data_dir, train=True, download=True)
         MNIST(self.data_dir, train=False, download=True)
 
-    def setup(self, stage: str = None) -> None:
+    def setup(self, stage: str | None = None) -> None:
         # Assign train/val datasets for use in dataloaders
         if stage == "fit" or stage is None:
             ds = MNIST(self.data_dir, train=True, transform=self.transform)
-            self.train_size = int(self.hparams.split * len(ds))
+            self.train_size = int(self.hparams.split * len(ds))  # type: ignore
             self.val_size = len(ds) - self.train_size
-            self.ds_train, self.ds_val = torch.utils.data.random_split(
+            self.ds_train, self.ds_val = random_split(
                 ds, [self.train_size, self.val_size]
             )
 
         # Assign test dataset for use in dataloader(s)
         if stage in ["test", "predict"] or stage is None:
-            self.ds_test = MNIST(
-                self.data_dir, train=False, transform=self.transform
-            )
+            self.ds_test = MNIST(self.data_dir, train=False, transform=self.transform)
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(self.ds_train, shuffle=True, **self.dl_config)

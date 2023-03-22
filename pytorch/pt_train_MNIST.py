@@ -4,8 +4,13 @@ from torch.utils.data import DataLoader
 import os
 import netron
 import matplotlib.pyplot as plt
-import pytorch_lightning as pl
+
+# import lightning as L
+import pytorch_lightning as L  # 2.0.0
+
+# from lightning.pytorch.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
+
 import torchmetrics
 import numpy as np
 from datetime import datetime
@@ -15,26 +20,21 @@ from pt_load_MNIST import load_MNIST, show_data
 from pt_load_MNIST_DataModule import MNIST_DataModule
 
 
-class DNN(pl.LightningModule):
+class DNN(L.LightningModule):
     def __init__(
         self,
         num_layers: int = 2,
         l2_weight: float = 0.01,
         optimizer: str = "Adam",
         lr: float = 0.001,
-        loss: nn.modules.loss._Loss = nn.CrossEntropyLoss(),
-        metrics: dict[str, torchmetrics.Metric | nn.modules.loss._Loss] = {
-            "accuracy": torchmetrics.Accuracy(task="multiclass", num_classes=10),
-            "cross_entropy": nn.CrossEntropyLoss(),
-        },
+        loss: str = "cross_entropy",
+        metrics: list[str] = ["accuracy"],
     ) -> None:
-        super(DNN, self).__init__()
-        self.save_hyperparameters(
-            ignore=["loss", "metrics"]
-        )  # We can access the hyperparameters via self.hparams
+        super().__init__()
+        self.save_hyperparameters()  # We can access the hyperparameters via self.hparams
 
         assert (
-            self.hparams.num_layers >= 1
+            self.hparams.num_layers >= 1  # type: ignore
         ), "We should have at least one layer because the output layer is counted."
 
         # Define the model
@@ -56,7 +56,7 @@ class DNN(pl.LightningModule):
         self.layers = []
         self.layers.append(nn.Flatten())
         current_dim = 28 * 28
-        for _ in range(self.hparams.num_layers - 1):
+        for _ in range(self.hparams.num_layers - 1):  # type: ignore
             self.layers.append(nn.Linear(current_dim, 128))
             self.layers.append(nn.BatchNorm1d(128))
             self.layers.append(nn.ReLU(inplace=True))
@@ -67,9 +67,28 @@ class DNN(pl.LightningModule):
         # Also, BCEWithLogitsLoss = Sigmoid + BCELoss
         self.dnn = nn.Sequential(*self.layers)
 
-        # Define loss and metrics
-        self.loss = loss
-        self.metrics = metrics
+        # Define loss
+        if self.hparams.loss == "cross_entropy":  # type: ignore
+            self.loss = nn.CrossEntropyLoss()
+        else:
+            raise NotImplementedError
+
+        # Check if the metrics are supported
+        supported_metrics = ["cross_entropy", "accuracy"]
+        for metric in self.hparams.metrics:  # type: ignore
+            assert metric in supported_metrics, f"{metric} is not supported."
+
+        # Define all possible metrics
+        if "cross_entropy" in self.hparams.metrics:  # type: ignore
+            self.cross_entropy = nn.CrossEntropyLoss()
+        if "accuracy" in self.hparams.metrics:  # type: ignore
+            self.accuracy = torchmetrics.Accuracy(task="multiclass", num_classes=10)
+
+        # DON'T DO THIS
+        # self.metrics = {
+        #     "cross_entropy": nn.CrossEntropyLoss(),
+        #     "accuracy": torchmetrics.Accuracy(task="multiclass", num_classes=10),
+        # }
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         y = self.dnn(x)
@@ -81,8 +100,10 @@ class DNN(pl.LightningModule):
     ) -> tuple[
         list[torch.optim.Optimizer], list[torch.optim.lr_scheduler._LRScheduler]
     ]:
-        optimizer = getattr(torch.optim, self.hparams.optimizer)(
-            self.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.l2_weight
+        optimizer = getattr(torch.optim, self.hparams.optimizer)(  # type: ignore
+            self.parameters(),
+            lr=self.hparams.lr,  # type: ignore
+            weight_decay=self.hparams.l2_weight,  # type: ignore
         )
         scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
 
@@ -100,11 +121,12 @@ class DNN(pl.LightningModule):
         loss = self.loss(y_pred, y)
 
         # Logging
-        sync_dist = False if mode == "train" else True
+        # sync_dist = False if mode == "train" else True
+        sync_dist = True
         log_config = {"sync_dist": sync_dist, "prog_bar": True, "on_epoch": True}
         self.log(f"{mode}_loss", loss, **log_config)
-        for metric_name, metric in self.metrics.items():
-            self.log(f"{mode}_{metric_name}", metric(y_pred, y), **log_config)
+        for metric in self.hparams.metrics:  # type: ignore
+            self.log(f"{mode}_{metric}", getattr(self, metric)(y_pred, y), **log_config)
 
         return loss
 
@@ -146,13 +168,14 @@ def plot_model_with_netron(model: nn.Module, name: str = "DNN") -> None:
 def train_model(
     train_dl: DataLoader,
     val_dl: DataLoader,
-    model: pl.LightningModule,
+    model: L.LightningModule,
     epochs: int = 3,
     enable_checkpointing: bool = True,
     enable_logging: bool = True,
     additional_callbacks: list = [],
     use_gpu: bool = False,
-) -> pl.Trainer:
+    ray_tune: bool = False,
+) -> L.Trainer:
     # Set callbacks
     callbacks = []
     # (We don't need to set the tensorboard logger because it is set by default)
@@ -179,17 +202,21 @@ def train_model(
         "tune_MNIST_000",
         datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     )
-    os.makedirs(os.path.join(default_root_dir, "lightning_logs"), exist_ok=True)
+    # if ray_tune:
+    #     os.makedirs(os.path.join(default_root_dir, "lightning_logs"), exist_ok=True)
     device_config = {}
     if not use_gpu:
         device_config["accelerator"] = "cpu"
     else:
         device_config["accelerator"] = "gpu"
-        device_config["devices"] = [0, 1, 2, 3]  # We have 4 GPUs
-        device_config[
-            "strategy"
-        ] = "ddp_find_unused_parameters_false"  # Allow to have unused parameters
-    trainer = pl.Trainer(
+        device_config["devices"] = "auto"
+        # device_config["devices"] = 4
+        # device_config["devices"] = [0, 1, 2, 3]
+        device_config["strategy"] = "ddp"  # Since 2.0.0, we need to use ddp
+        # device_config[
+        #     "strategy"
+        # ] = "ddp_find_unused_parameters_false"  # Allow to have unused parameters
+    trainer = L.Trainer(
         default_root_dir=default_root_dir,
         max_epochs=epochs,
         log_every_n_steps=50,  # default: 50
@@ -207,8 +234,8 @@ def train_model(
 
 
 def test_model(
-    model: pl.LightningModule,
-    trainer: pl.Trainer,
+    model: L.LightningModule,
+    trainer: L.Trainer,
     test_dl: DataLoader,
 ) -> dict:
     """
@@ -234,13 +261,13 @@ def test_model(
 
 
 def plot_predictions(
-    model: pl.LightningModule,
-    trainer: pl.Trainer,
+    model: L.LightningModule,
+    trainer: L.Trainer,
     test_dl: DataLoader,
 ) -> None:
     # Get all the predictions (y_pred_list[0].shape: (32, 10))
     y_pred_list = trainer.predict(model, dataloaders=test_dl)
-    y_pred = y_pred_list[0]  # Extract the first batch
+    y_pred = y_pred_list[0]  # Extract the first batch  # type: ignore
 
     # Show the first 5 predictions
     x, y = next(iter(test_dl))
@@ -251,17 +278,20 @@ def plot_predictions(
 
 
 def trainable(
-    config: dict,
-    other_kwargs: dict,
+    tunable_params: dict,
+    fixed_params: dict,
     ray_tune: bool = True,
     use_lightning_data_module: bool = True,
+    data_dir: str = "./",
 ) -> None:
     # Load data
     if not use_lightning_data_module:
-        train_dl, test_dl = load_MNIST(batch_size=config["batch_size"])
+        train_dl, test_dl = load_MNIST(batch_size=tunable_params["batch_size"])
         val_dl = test_dl
     else:
-        dm = MNIST_DataModule(batch_size=256, split=0.8)
+        dm = MNIST_DataModule(
+            data_dir=data_dir, batch_size=tunable_params["batch_size"], split=0.8
+        )
         dm.prepare_data()
         dm.setup()
         train_dl = dm.train_dataloader()
@@ -272,12 +302,12 @@ def trainable(
 
     # Get the model
     model = DNN(
-        num_layers=config["num_layers"],
-        l2_weight=config["l2_weight"],
-        optimizer=config["optimizer"],
-        lr=config["lr"],
-        loss=other_kwargs["loss"],
-        metrics=other_kwargs["metrics"],
+        num_layers=tunable_params["num_layers"],
+        l2_weight=tunable_params["l2_weight"],
+        optimizer=tunable_params["optimizer"],
+        lr=tunable_params["lr"],
+        loss=fixed_params["loss"],
+        metrics=fixed_params["metrics"],
     )
     if not ray_tune:
         print(model)
@@ -306,12 +336,13 @@ def trainable(
         train_dl,
         val_dl,
         model,
-        epochs=config["epochs"],
+        epochs=tunable_params["epochs"],
         additional_callbacks=additional_callbacks,
         enable_checkpointing=not ray_tune,
         enable_logging=not ray_tune,
         # TuneReportCheckpointCallback will handle checkpointing and logging
-        use_gpu=other_kwargs["use_gpu"],
+        use_gpu=fixed_params["use_gpu"],
+        ray_tune=ray_tune,
     )
 
     if not ray_tune:
@@ -327,15 +358,13 @@ def trainable(
 
 
 if __name__ == "__main__":
-    other_kwargs = {
-        "loss": nn.CrossEntropyLoss(),
-        "metrics": {
-            "accuracy": torchmetrics.Accuracy(task="multiclass", num_classes=10),
-            "cross_entropy": nn.CrossEntropyLoss(),
-        },
-        "use_gpu": False,  # if True, please use script to run the code
+    fixed_params = {
+        "loss": "cross_entropy",
+        "metrics": ["cross_entropy", "accuracy"],
+        # We must initialize the torchmetrics inside the model
+        "use_gpu": True,  # if True, please use script to run the code
     }
-    config = {
+    tunable_params = {
         "batch_size": 256,
         "optimizer": "Adam",
         "lr": 0.001,
@@ -345,6 +374,9 @@ if __name__ == "__main__":
     }
 
     # Set all random seeds (Python, NumPy, PyTorch)
-    pl.seed_everything(seed=0)
+    L.seed_everything(seed=0)
 
-    trainable(config, other_kwargs, ray_tune=False)
+    # Set the precision of the matrix multiplication
+    torch.set_float32_matmul_precision("high")
+
+    trainable(tunable_params, fixed_params, ray_tune=False)
