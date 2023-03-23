@@ -18,141 +18,9 @@ from ray.tune.integration.pytorch_lightning import TuneReportCheckpointCallback
 
 from pt_load_MNIST import load_MNIST, show_data
 from pt_load_MNIST_DataModule import MNIST_DataModule
-
-
-class DNN(L.LightningModule):
-    def __init__(
-        self,
-        num_layers: int = 2,
-        l2_weight: float = 0.01,
-        optimizer: str = "Adam",
-        lr: float = 0.001,
-        loss: str = "cross_entropy",
-        metrics: list[str] = ["accuracy"],
-    ) -> None:
-        super().__init__()
-        self.save_hyperparameters()  # We can access the hyperparameters via self.hparams
-
-        assert (
-            self.hparams.num_layers >= 1  # type: ignore
-        ), "We should have at least one layer because the output layer is counted."
-
-        # Define the model
-        """
-        self.dnn = nn.Sequential(
-            nn.Flatten(),
-
-            -----------------------------------------
-            nn.Linear(28 * 28, 128),
-            nn.BatchNorm1d(128),
-            nn.ReLU(inplace=True),
-            -----------------------------------------
-            
-            nn.Linear(128, 10),
-            nn.Softmax(dim=1),
-        )
-        """
-
-        self.layers = []
-        self.layers.append(nn.Flatten())
-        current_dim = 28 * 28
-        for _ in range(self.hparams.num_layers - 1):  # type: ignore
-            self.layers.append(nn.Linear(current_dim, 128))
-            self.layers.append(nn.BatchNorm1d(128))
-            self.layers.append(nn.ReLU(inplace=True))
-            current_dim = 128
-        self.layers.append(nn.Linear(current_dim, 10))
-        # self.layers.append(nn.Softmax(dim=1))
-        # We don't need to use this because nn.CrossEntropyLoss() already includes softmax
-        # Also, BCEWithLogitsLoss = Sigmoid + BCELoss
-        self.dnn = nn.Sequential(*self.layers)
-
-        # Define loss
-        if self.hparams.loss == "cross_entropy":  # type: ignore
-            self.loss = nn.CrossEntropyLoss()
-        else:
-            raise NotImplementedError
-
-        # Check if the metrics are supported
-        supported_metrics = ["cross_entropy", "accuracy"]
-        for metric in self.hparams.metrics:  # type: ignore
-            assert metric in supported_metrics, f"{metric} is not supported."
-
-        # Define all possible metrics
-        if "cross_entropy" in self.hparams.metrics:  # type: ignore
-            self.cross_entropy = nn.CrossEntropyLoss()
-        if "accuracy" in self.hparams.metrics:  # type: ignore
-            self.accuracy = torchmetrics.Accuracy(task="multiclass", num_classes=10)
-
-        # DON'T DO THIS
-        # self.metrics = {
-        #     "cross_entropy": nn.CrossEntropyLoss(),
-        #     "accuracy": torchmetrics.Accuracy(task="multiclass", num_classes=10),
-        # }
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        y = self.dnn(x)
-
-        return y
-
-    def configure_optimizers(
-        self,
-    ) -> tuple[
-        list[torch.optim.Optimizer], list[torch.optim.lr_scheduler._LRScheduler]
-    ]:
-        optimizer = getattr(torch.optim, self.hparams.optimizer)(  # type: ignore
-            self.parameters(),
-            lr=self.hparams.lr,  # type: ignore
-            weight_decay=self.hparams.l2_weight,  # type: ignore
-        )
-        scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
-
-        return [optimizer], [scheduler]
-
-    def shared_step(
-        self, batch: tuple[torch.Tensor, torch.Tensor], mode: str
-    ) -> torch.Tensor:
-        x, y = batch
-
-        # Get outputs
-        y_pred = self(x)
-
-        # Compute loss
-        loss = self.loss(y_pred, y)
-
-        # Logging
-        # sync_dist = False if mode == "train" else True
-        sync_dist = True
-        log_config = {"sync_dist": sync_dist, "prog_bar": True, "on_epoch": True}
-        self.log(f"{mode}_loss", loss, **log_config)
-        for metric in self.hparams.metrics:  # type: ignore
-            self.log(f"{mode}_{metric}", getattr(self, metric)(y_pred, y), **log_config)
-
-        return loss
-
-    def training_step(
-        self, batch: tuple[torch.Tensor, torch.Tensor], batch_idx: int
-    ) -> torch.Tensor:
-        loss = self.shared_step(batch, mode="train")
-        return loss
-
-    def validation_step(
-        self, batch: tuple[torch.Tensor, torch.Tensor], batch_idx: int
-    ) -> None:
-        loss = self.shared_step(batch, mode="val")
-
-    def test_step(
-        self, batch: tuple[torch.Tensor, torch.Tensor], batch_idx: int
-    ) -> None:
-        loss = self.shared_step(batch, mode="test")
-
-    def predict_step(
-        self, batch: tuple[torch.Tensor, torch.Tensor], batch_idx: int
-    ) -> torch.Tensor:
-        x, y = batch
-        y_pred = self(x)
-
-        return y_pred
+from models.MLP import MLP
+from models.CNN import CNN
+from models.LightningModuleWrapper import LightningModuleWrapper
 
 
 def plot_model_with_netron(model: nn.Module, name: str = "DNN") -> None:
@@ -199,7 +67,8 @@ def train_model(
     # Set trainer
     default_root_dir = os.path.join(
         "ray_results",
-        "tune_MNIST_000",
+        f"{model.name}",
+        f"tune_MNIST_000",
         datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     )
     # if ray_tune:
@@ -301,8 +170,15 @@ def trainable(
         show_data(train_dl)  # Show the data
 
     # Get the model
-    model = DNN(
-        num_layers=tunable_params["num_layers"],
+    if fixed_params["model_name"] == "MLP":
+        model = MLP(tunable_params["num_layers"])
+    elif fixed_params["model_name"] == "CNN":
+        model = CNN(tunable_params["num_conv_layers"])
+    else:
+        raise ValueError(f"Unknown model: {fixed_params['model_name']}")
+
+    model = LightningModuleWrapper(
+        model=model,
         l2_weight=tunable_params["l2_weight"],
         optimizer=tunable_params["optimizer"],
         lr=tunable_params["lr"],
@@ -359,6 +235,8 @@ def trainable(
 
 if __name__ == "__main__":
     fixed_params = {
+        # "model_name": "MLP",
+        "model_name": "CNN",
         "loss": "cross_entropy",
         "metrics": ["cross_entropy", "accuracy"],
         # We must initialize the torchmetrics inside the model
@@ -368,10 +246,13 @@ if __name__ == "__main__":
         "batch_size": 256,
         "optimizer": "Adam",
         "lr": 0.001,
-        "num_layers": 3,
         "l2_weight": 0.01,
         "epochs": 3,
     }
+    if fixed_params["model_name"] == "MLP":
+        tunable_params["num_layers"] = 3
+    elif fixed_params["model_name"] == "CNN":
+        tunable_params["num_conv_layers"] = 3
 
     # Set all random seeds (Python, NumPy, PyTorch)
     L.seed_everything(seed=0)

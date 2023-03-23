@@ -63,7 +63,7 @@ def tune_models(
         run_config=air.RunConfig(
             name=f"tune_MNIST_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}",
             verbose=2,  # default = 2
-            local_dir="./ray_results",
+            local_dir=f"./ray_results/{fixed_params['model_name']}",
         ),
     )
     results = tuner.fit()
@@ -78,6 +78,8 @@ def tune_models(
 
 if __name__ == "__main__":
     fixed_params = {
+        # "model_name": "MLP",
+        "model_name": "CNN",
         "loss": "cross_entropy",
         "metrics": ["cross_entropy", "accuracy"],
         # We must initialize the torchmetrics inside the model
@@ -88,10 +90,13 @@ if __name__ == "__main__":
         "batch_size": tune.choice([512]),
         "optimizer": tune.choice(["Adam", "NAdam", "SGD"]),
         "lr": tune.choice([0.01, 0.001, 0.0001]),
-        "num_layers": tune.choice([1, 2, 3, 4]),
         "l2_weight": tune.choice([0.01, 0.001, 0.0001]),
         "epochs": tune.choice([3, 5, 10]),
     }
+    if fixed_params["model_name"] == "MLP":
+        tunable_params["num_layers"] = tune.choice([2, 3, 4])
+    elif fixed_params["model_name"] == "CNN":
+        tunable_params["num_conv_layers"] = tune.choice([1, 2, 3])
 
     # Set all random seeds (Python, NumPy, PyTorch)
     L.seed_everything(seed=0)
@@ -101,5 +106,5 @@ if __name__ == "__main__":
 
     # Tune the model
     results_df = tune_models(
-        fixed_params, tunable_params, num_trials=100, max_concurrent_trials=1
+        fixed_params, tunable_params, num_trials=100, max_concurrent_trials=4
     )
