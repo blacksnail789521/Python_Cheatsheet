@@ -33,8 +33,6 @@ class LightningModuleWrapper(L.LightningModule):
         # Define loss
         if self.hparams.loss == "cross_entropy":  # type: ignore
             self.loss = nn.CrossEntropyLoss()
-        else:
-            raise NotImplementedError
 
         # Check if the metrics are supported
         supported_metrics = ["cross_entropy", "accuracy"]
