@@ -135,7 +135,7 @@ def plot_predictions(
     test_dl: DataLoader,
 ) -> None:
     # Get all the predictions (y_pred_list[0].shape: (32, 10))
-    y_pred_list = trainer.predict(model, dataloaders=test_dl)
+    y_pred_list = trainer.predict(model, dataloaders=test_dl, ckpt_path="best")
     y_pred = y_pred_list[0]  # Extract the first batch  # type: ignore
 
     # Show the first 5 predictions
@@ -260,4 +260,7 @@ if __name__ == "__main__":
     # Set the precision of the matrix multiplication
     torch.set_float32_matmul_precision("high")
 
+    # Train the model
     trainable(tunable_params, fixed_params, ray_tune=False)
+
+    print("### Done ###")

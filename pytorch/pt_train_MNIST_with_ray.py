@@ -14,8 +14,8 @@ from pt_train_MNIST import trainable
 
 
 def tune_models(
-    fixed_params: dict,
     tunable_params: dict,
+    fixed_params: dict,
     num_trials: int = 10,
     max_concurrent_trials: int = 1,
 ) -> pd.DataFrame:
@@ -106,5 +106,7 @@ if __name__ == "__main__":
 
     # Tune the model
     results_df = tune_models(
-        fixed_params, tunable_params, num_trials=100, max_concurrent_trials=4
+        tunable_params, fixed_params, num_trials=100, max_concurrent_trials=4
     )
+
+    print("### Done ###")
