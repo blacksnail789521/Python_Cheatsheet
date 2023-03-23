@@ -157,7 +157,7 @@ class DNN(L.LightningModule):
 
 def plot_model_with_netron(model: nn.Module, name: str = "DNN") -> None:
     # Save the model
-    model_path = os.path.join("models", f"{name}.pt")
+    model_path = os.path.join("saved_models", f"{name}.pt")
     os.makedirs(os.path.dirname(model_path), exist_ok=True)
     torch.save(model, model_path)  # Don't use .state_dict()
 

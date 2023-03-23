@@ -70,9 +70,8 @@ def tune_models(
 
     print("Best hyperparameters found were: ", results.get_best_result().config)
 
-    # If we are running multiple trials, we need to kill the processes
-    if max_concurrent_trials > 1:
-        subprocess.run(["pkill", "-9", "-f", "ray::ImplicitFunc.train"])
+    # Kill all the subprocesses
+    subprocess.run(["pkill", "-9", "-f", "ray::ImplicitFunc.train"])
 
     return results.get_dataframe()
 
@@ -85,7 +84,7 @@ if __name__ == "__main__":
         "use_gpu": True,  # if True, please use script to run the code
     }
     tunable_params = {
-        # "batch_size": tune.choice([32, 64, 128, 256]),
+        # "batch_size": tune.choice([32, 64, 128, 256, 512]),
         "batch_size": tune.choice([512]),
         "optimizer": tune.choice(["Adam", "NAdam", "SGD"]),
         "lr": tune.choice([0.01, 0.001, 0.0001]),
@@ -102,5 +101,5 @@ if __name__ == "__main__":
 
     # Tune the model
     results_df = tune_models(
-        fixed_params, tunable_params, num_trials=16, max_concurrent_trials=4
+        fixed_params, tunable_params, num_trials=100, max_concurrent_trials=1
     )

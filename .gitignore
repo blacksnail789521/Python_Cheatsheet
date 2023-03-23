@@ -2,7 +2,7 @@
 tensorboard/
 __pycache__/
 ray_results/
-models/
+saved_models/
 model.png
 lightning_logs/
 MNIST/

@@ -93,7 +93,7 @@ def show_model(model: tf.keras.Model) -> dict[str, int]:
 
 def plot_model_with_netron(model: tf.keras.Model, name: str = "DNN") -> None:
     # Save the model
-    model_path = os.path.join("models", f"{name}.h5")  # Only support .h5
+    model_path = os.path.join("saved_models", f"{name}.h5")  # Only support .h5
     os.makedirs(os.path.dirname(model_path), exist_ok=True)
     model.save(model_path)
 
