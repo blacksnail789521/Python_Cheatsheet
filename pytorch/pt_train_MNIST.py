@@ -34,9 +34,9 @@ def plot_model_with_netron(model: nn.Module, name: str = "DNN") -> None:
 
 
 def train_model(
+    model: L.LightningModule,
     train_dl: DataLoader,
     val_dl: DataLoader,
-    model: L.LightningModule,
     epochs: int = 3,
     enable_checkpointing: bool = True,
     enable_logging: bool = True,
@@ -186,9 +186,9 @@ def trainable(
     print("---------------------------------------")
     print("Training ...")
     trainer = train_model(
+        model,
         train_dl,
         val_dl,
-        model,
         epochs=tunable_params["epochs"],
         additional_callbacks=additional_callbacks,
         enable_checkpointing=not ray_tune,
@@ -200,7 +200,7 @@ def trainable(
 
     if trainer.is_global_zero and not ray_tune:  # Make sure we're at the root rank
         # Load the best model
-        model = model.load_from_checkpoint(trainer.checkpoint_callback.best_model_path)
+        model = model.load_from_checkpoint(trainer.checkpoint_callback.best_model_path)  # type: ignore
 
         # Get the test version of trainer for testing and predicting
         if fixed_params["use_gpu"]:
