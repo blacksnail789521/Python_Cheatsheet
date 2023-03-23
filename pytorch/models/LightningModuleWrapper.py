@@ -15,7 +15,7 @@ class LightningModuleWrapper(L.LightningModule):
         optimizer: torch.optim.Optimizer | str,
         lr: float,
         loss: nn.Module | str,
-        metrics: dict,
+        metrics: list[str],
     ):
         super().__init__()
         self.model = model
