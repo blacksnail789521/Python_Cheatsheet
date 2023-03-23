@@ -14,13 +14,21 @@ class LightningModuleWrapper(L.LightningModule):
         l2_weight: float,
         optimizer: torch.optim.Optimizer | str,
         lr: float,
-        loss: nn.Module | str,
+        loss: str,
         metrics: list[str],
     ):
         super().__init__()
         self.model = model
         self.name = model.__class__.__name__
         self.save_hyperparameters()  # We can access the hyperparameters via self.hparams
+
+        """Please note that loss must be differentiable."""
+
+        # Check if the loss is supported
+        supported_losses = ["cross_entropy"]
+        assert (
+            self.hparams.loss in supported_losses  # type: ignore
+        ), f"{self.hparams.loss} is not supported."  # type: ignore
 
         # Define loss
         if self.hparams.loss == "cross_entropy":  # type: ignore
