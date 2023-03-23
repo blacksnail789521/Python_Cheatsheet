@@ -81,10 +81,10 @@ def train_model(
         device_config["devices"] = "auto"
         # device_config["devices"] = 4
         # device_config["devices"] = [0, 1, 2, 3]
-        device_config["strategy"] = "ddp"  # Since 2.0.0, we need to use ddp
-        # device_config[
-        #     "strategy"
-        # ] = "ddp_find_unused_parameters_false"  # Allow to have unused parameters
+        # device_config["strategy"] = "ddp"  # Since 2.0.0, we need to use ddp
+        device_config[
+            "strategy"
+        ] = "ddp_find_unused_parameters_false"  # Allow to have unused parameters
     trainer = L.Trainer(
         default_root_dir=default_root_dir,
         max_epochs=epochs,
@@ -99,43 +99,20 @@ def train_model(
     # Train the model
     trainer.fit(model, train_dl, val_dl)
 
+    # Destroy ddp
+    if use_gpu:
+        torch.distributed.destroy_process_group()  # type: ignore
+
     return trainer
-
-
-def test_model(
-    model: L.LightningModule,
-    trainer: L.Trainer,
-    test_dl: DataLoader,
-) -> dict:
-    """
-    # Method 1: don't pass the model so that the best model is automatically loaded
-    loss_list = trainer.test(dataloaders=test_dl)
-
-    # Method 2: pass the model and specify the ckpt_path
-    loss_list = trainer.test(model, test_dl, ckpt_path="best")
-
-    # Method 3: load the best model manually, and then pass it to the trainer
-    model.load_state_dict(
-        torch.load(trainer.checkpoint_callback.best_model_path)["state_dict"]
-    )
-    loss_list = trainer.test(model, test_dl)
-    """
-    # Test the model
-    loss_list = trainer.test(model, test_dl, ckpt_path="best")
-
-    # The length of the loss_list corresponds to the number of dataloaders used.
-    test_loss_dict = loss_list[0]
-
-    return test_loss_dict
 
 
 def plot_predictions(
     model: L.LightningModule,
-    trainer: L.Trainer,
+    tester: L.Trainer,
     test_dl: DataLoader,
 ) -> None:
     # Get all the predictions (y_pred_list[0].shape: (32, 10))
-    y_pred_list = trainer.predict(model, dataloaders=test_dl, ckpt_path="best")
+    y_pred_list = tester.predict(model, test_dl)
     y_pred = y_pred_list[0]  # Extract the first batch  # type: ignore
 
     # Show the first 5 predictions
@@ -221,33 +198,46 @@ def trainable(
         ray_tune=ray_tune,
     )
 
-    if not ray_tune:
+    if trainer.is_global_zero and not ray_tune:  # Make sure we're at the root rank
+        # Load the best model
+        model = model.load_from_checkpoint(trainer.checkpoint_callback.best_model_path)
+
+        # Get the test version of trainer for testing and predicting
+        if fixed_params["use_gpu"]:
+            # Only use 1 GPU for testing and predicting
+            tester = L.Trainer(accelerator="gpu", devices=1)
+        else:
+            tester = L.Trainer(accelerator="cpu")
+
         # Test
         print("---------------------------------------")
         print("Testing ...")
-        test_loss = test_model(model, trainer, test_dl)
+        # The length of the loss_list corresponds to the number of dataloaders used.
+        loss_list = tester.test(model, test_dl)
+        test_loss = loss_list[0]["test_loss"]
+        print(f"Test loss: {test_loss}")
 
         # Predict
         print("---------------------------------------")
         print("Predicting ...")
-        plot_predictions(model, trainer, test_dl)
+        plot_predictions(model, tester, test_dl)
 
 
 if __name__ == "__main__":
     fixed_params = {
-        # "model_name": "MLP",
-        "model_name": "CNN",
+        "model_name": "MLP",
+        # "model_name": "CNN",
         "loss": "cross_entropy",
         "metrics": ["cross_entropy", "accuracy"],
         # We must initialize the torchmetrics inside the model
-        "use_gpu": True,  # if True, please use script to run the code
+        "use_gpu": False,  # if True, please use script to run the code
     }
     tunable_params = {
         "batch_size": 256,
         "optimizer": "Adam",
         "lr": 0.001,
         "l2_weight": 0.01,
-        "epochs": 3,
+        "epochs": 100,
     }
     if fixed_params["model_name"] == "MLP":
         tunable_params["num_layers"] = 3
