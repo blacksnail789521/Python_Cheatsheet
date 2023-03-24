@@ -4,5 +4,4 @@ __pycache__/
 ray_results/
 saved_models/
 model.png
-lightning_logs/
 MNIST/

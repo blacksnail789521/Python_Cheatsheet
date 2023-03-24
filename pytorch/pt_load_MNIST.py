@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import Dataset, DataLoader
-import os
+from pathlib import Path
 from torchvision.datasets import MNIST
 from torchvision import transforms
 import matplotlib.pyplot as plt
@@ -65,7 +65,7 @@ def load_MNIST(
     else:
         # Get ds
         train_ds = MNIST(
-            root=os.getcwd(),
+            root=str(Path.cwd()),
             train=True,
             download=True,
             transform=transforms.ToTensor()
@@ -73,7 +73,7 @@ def load_MNIST(
             # a torch.FloatTensor of shape (C x H x W) in the range [0.0, 1.0]
         )
         test_ds = MNIST(
-            root=os.getcwd(),
+            root=str(Path.cwd()),
             train=False,
             download=True,
             transform=transforms.ToTensor(),

@@ -7,8 +7,8 @@ from ray import air, tune
 from ray.tune.schedulers import AsyncHyperBandScheduler
 import multiprocessing
 import pandas as pd
-import os
 import subprocess
+from pathlib import Path
 
 from pt_train_MNIST import trainable
 
@@ -28,6 +28,14 @@ def tune_models(
     6. Define the mode (tune_config/mode)
     """
 
+    # Define the directory to save the results
+    default_root_dir = Path(
+        "ray_results",
+        fixed_params["model_name"],
+        f"tune_models",
+        datetime.now().strftime("%Y-%m-%d_%H:%M:%S"),
+    )
+
     # Pass in a Trainable class or function, along with a search space "config".
     tuner = tune.Tuner(
         trainable=tune.with_resources(
@@ -36,7 +44,7 @@ def tune_models(
                 fixed_params=fixed_params,
                 ray_tune=True,
                 use_lightning_data_module=True,
-                data_dir=os.getcwd(),  # Avoid redownloading the data
+                data_dir=str(Path.cwd()),  # Avoid redownloading the data
             ),
             resources={
                 "cpu": multiprocessing.cpu_count() // max_concurrent_trials,
@@ -61,9 +69,9 @@ def tune_models(
             max_concurrent_trials=max_concurrent_trials,  # default = 0 (unlimited)
         ),
         run_config=air.RunConfig(
-            name=f"tune_MNIST_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}",
+            name=str(default_root_dir.name),
             verbose=2,  # default = 2
-            local_dir=f"./ray_results/{fixed_params['model_name']}",
+            local_dir=str(default_root_dir.parent),
         ),
     )
     results = tuner.fit()

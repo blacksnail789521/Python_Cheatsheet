@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-import os
 import netron
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 # import lightning as L
 import pytorch_lightning as L  # 2.0.0
@@ -25,8 +25,8 @@ from models.LightningModuleWrapper import LightningModuleWrapper
 
 def plot_model_with_netron(model: nn.Module, name: str = "DNN") -> None:
     # Save the model
-    model_path = os.path.join("saved_models", f"{name}.pt")
-    os.makedirs(os.path.dirname(model_path), exist_ok=True)
+    model_path = Path("saved_models", f"{name}.pt")
+    model_path.parent.mkdir(parents=True, exist_ok=True)
     torch.save(model, model_path)  # Don't use .state_dict()
 
     # Plot the model
@@ -65,14 +65,12 @@ def train_model(
     callbacks.extend(additional_callbacks)
 
     # Set trainer
-    default_root_dir = os.path.join(
+    default_root_dir = Path(
         "ray_results",
         f"{model.name}",
-        f"tune_MNIST_000",
-        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        f"train_a_model",
+        datetime.now().strftime("%Y-%m-%d_%H:%M:%S"),
     )
-    # if ray_tune:
-    #     os.makedirs(os.path.join(default_root_dir, "lightning_logs"), exist_ok=True)
     device_config = {}
     if not use_gpu:
         device_config["accelerator"] = "cpu"
@@ -110,6 +108,8 @@ def plot_predictions(
     model: L.LightningModule,
     tester: L.Trainer,
     test_dl: DataLoader,
+    log_dir: Path,
+    enable_show: bool = True,
 ) -> None:
     # Get all the predictions (y_pred_list[0].shape: (32, 10))
     y_pred_list = tester.predict(model, test_dl)
@@ -120,7 +120,14 @@ def plot_predictions(
     for i in range(5):
         plt.imshow(x[i, 0, :, :], cmap="gray")
         plt.title(f"Label: {y[i]}, Prediction: {np.argmax(y_pred[i])}")
-        plt.show()
+
+        # Save the figure
+        plot_folder = log_dir / "plots"
+        plot_folder.mkdir(parents=True, exist_ok=True)
+        plt.savefig(plot_folder / f"prediction_{i}.png")
+        if enable_show:
+            plt.show()
+        plt.close()
 
 
 def trainable(
@@ -199,15 +206,18 @@ def trainable(
     )
 
     if trainer.is_global_zero and not ray_tune:  # Make sure we're at the root rank
-        # Load the best model
+        # Load every information we need from the trainer
+        # (best_model, logger, log_dir)
         model = model.load_from_checkpoint(trainer.checkpoint_callback.best_model_path)  # type: ignore
+        logger = trainer.logger  # type: ignore
+        log_dir = Path(logger.log_dir)  # type: ignore
 
-        # Get the test version of trainer for testing and predicting
-        if fixed_params["use_gpu"]:
-            # Only use 1 GPU for testing and predicting
-            tester = L.Trainer(accelerator="gpu", devices=1)
+        # Get the test version of trainer for testing and predicting (same logger)
+        if not fixed_params["use_gpu"]:
+            tester = L.Trainer(logger=logger, accelerator="cpu")  # type: ignore
         else:
-            tester = L.Trainer(accelerator="cpu")
+            # Only use 1 GPU for testing and predicting
+            tester = L.Trainer(logger=logger, accelerator="gpu", devices=1)  # type: ignore
 
         # Test
         print("---------------------------------------")
@@ -220,7 +230,7 @@ def trainable(
         # Predict
         print("---------------------------------------")
         print("Predicting ...")
-        plot_predictions(model, tester, test_dl)
+        plot_predictions(model, tester, test_dl, log_dir)
 
 
 if __name__ == "__main__":
@@ -230,14 +240,14 @@ if __name__ == "__main__":
         "loss": "cross_entropy",
         "metrics": ["cross_entropy", "accuracy"],
         # We must initialize the torchmetrics inside the model
-        "use_gpu": False,  # if True, please use script to run the code
+        "use_gpu": True,  # if True, please use script to run the code
     }
     tunable_params = {
         "batch_size": 256,
         "optimizer": "Adam",
         "lr": 0.001,
         "l2_weight": 0.01,
-        "epochs": 100,
+        "epochs": 3,
     }
     if fixed_params["model_name"] == "MLP":
         tunable_params["num_layers"] = 3
