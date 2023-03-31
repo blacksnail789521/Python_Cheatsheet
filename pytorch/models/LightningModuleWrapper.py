@@ -20,7 +20,9 @@ class LightningModuleWrapper(L.LightningModule):
         super().__init__()
         self.model = model
         self.name = model.__class__.__name__
-        self.save_hyperparameters()  # We can access the hyperparameters via self.hparams
+        self.save_hyperparameters(
+            ignore=["model"]
+        )  # We can access the hyperparameters via self.hparams
 
         """Please note that loss must be differentiable."""
 
