@@ -130,6 +130,17 @@ def plot_predictions(
         plt.close()
 
 
+def get_nn_model(tunable_params: dict, fixed_params: dict) -> nn.Module:
+    if fixed_params["model_name"] == "MLP":
+        nn_model = MLP(tunable_params["num_layers"])
+    elif fixed_params["model_name"] == "CNN":
+        nn_model = CNN(tunable_params["num_conv_layers"])
+    else:
+        raise ValueError(f"Unknown model name: {fixed_params['model_name']}")
+
+    return nn_model
+
+
 def trainable(
     tunable_params: dict,
     fixed_params: dict,
@@ -153,16 +164,11 @@ def trainable(
     if not ray_tune:
         show_data(train_dl)  # Show the data
 
-    # Get the model
-    if fixed_params["model_name"] == "MLP":
-        model = MLP(tunable_params["num_layers"])
-    elif fixed_params["model_name"] == "CNN":
-        model = CNN(tunable_params["num_conv_layers"])
-    else:
-        raise ValueError(f"Unknown model: {fixed_params['model_name']}")
+    # Get the nn_model
+    nn_model = get_nn_model(tunable_params, fixed_params)
 
     model = LightningModuleWrapper(
-        model=model,
+        nn_model=nn_model,
         l2_weight=tunable_params["l2_weight"],
         optimizer=tunable_params["optimizer"],
         lr=tunable_params["lr"],
@@ -208,7 +214,10 @@ def trainable(
     if trainer.is_global_zero and not ray_tune:  # Make sure we're at the root rank
         # Load every information we need from the trainer
         # (best_model, logger, log_dir)
-        model = model.load_from_checkpoint(trainer.checkpoint_callback.best_model_path)  # type: ignore
+        nn_model = get_nn_model(tunable_params, fixed_params)
+        model = model.load_from_checkpoint(
+            trainer.checkpoint_callback.best_model_path, nn_model=nn_model  # type: ignore
+        )
         logger = trainer.logger  # type: ignore
         log_dir = Path(logger.log_dir)  # type: ignore
 
@@ -234,20 +243,30 @@ def trainable(
 
 
 if __name__ == "__main__":
+    """-----------------------------------------------"""
+    model_name = "MLP"
+    # model_name = "CNN"
+
+    # use_gpu = False
+    use_gpu = True
+
+    epochs = 3
+    # epochs = 1
+    """-----------------------------------------------"""
+
     fixed_params = {
-        "model_name": "MLP",
-        # "model_name": "CNN",
+        "model_name": model_name,
         "loss": "cross_entropy",
         "metrics": ["cross_entropy", "accuracy"],
         # We must initialize the torchmetrics inside the model
-        "use_gpu": True,  # if True, please use script to run the code
+        "use_gpu": use_gpu,  # if True, please use script to run the code
     }
     tunable_params = {
         "batch_size": 256,
         "optimizer": "Adam",
         "lr": 0.001,
         "l2_weight": 0.01,
-        "epochs": 3,
+        "epochs": epochs,
     }
     if fixed_params["model_name"] == "MLP":
         tunable_params["num_layers"] = 3

@@ -10,7 +10,7 @@ import torchmetrics
 class LightningModuleWrapper(L.LightningModule):
     def __init__(
         self,
-        model: nn.Module,
+        nn_model: nn.Module,
         l2_weight: float,
         optimizer: torch.optim.Optimizer | str,
         lr: float,
@@ -18,10 +18,10 @@ class LightningModuleWrapper(L.LightningModule):
         metrics: list[str],
     ):
         super().__init__()
-        self.model = model
-        self.name = model.__class__.__name__
+        self.nn_model = nn_model
+        self.name = nn_model.__class__.__name__
         self.save_hyperparameters(
-            ignore=["model"]
+            ignore=["nn_model"]
         )  # We can access the hyperparameters via self.hparams
 
         """Please note that loss must be differentiable."""
@@ -54,7 +54,7 @@ class LightningModuleWrapper(L.LightningModule):
         # }
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.model(x)
+        return self.nn_model(x)
 
     def configure_optimizers(
         self,
