@@ -107,7 +107,7 @@ if __name__ == "__main__":
         tunable_params["num_conv_layers"] = tune.choice([1, 2, 3])
 
     # Set all random seeds (Python, NumPy, PyTorch)
-    L.seed_everything(seed=0)
+    L.seed_everything(seed=42, workers=True)
 
     # Set the precision of the matrix multiplication
     torch.set_float32_matmul_precision("high")

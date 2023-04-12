@@ -42,6 +42,7 @@ def train_model(
     enable_logging: bool = True,
     additional_callbacks: list = [],
     use_gpu: bool = False,
+    devices: int | list[int] | str = "auto",
     ray_tune: bool = False,
 ) -> L.Trainer:
     # Set callbacks
@@ -71,16 +72,14 @@ def train_model(
         f"train_a_model",
         datetime.now().strftime("%Y-%m-%d_%H:%M:%S"),
     )
-    device_config = {}
+    device_params = {}
     if not use_gpu:
-        device_config["accelerator"] = "cpu"
+        device_params["accelerator"] = "cpu"
     else:
-        device_config["accelerator"] = "gpu"
-        device_config["devices"] = "auto"
-        # device_config["devices"] = 4
-        # device_config["devices"] = [0, 1, 2, 3]
-        # device_config["strategy"] = "ddp"  # Since 2.0.0, we need to use ddp
-        device_config[
+        device_params["accelerator"] = "gpu"
+        device_params["devices"] = devices
+        # device_params["strategy"] = "ddp"  # Since 2.0.0, we need to use ddp
+        device_params[
             "strategy"
         ] = "ddp_find_unused_parameters_false"  # Allow to have unused parameters
     trainer = L.Trainer(
@@ -91,14 +90,14 @@ def train_model(
         enable_checkpointing=enable_checkpointing,
         logger=enable_logging,
         # We don't need to save the model because we use ModelCheckpoint
-        **device_config,
+        **device_params,
     )
 
     # Train the model
     trainer.fit(model, train_dl, val_dl)
 
     # Destroy ddp
-    if use_gpu:
+    if use_gpu and device_params.get("strategy", None) is not None:
         torch.distributed.destroy_process_group()  # type: ignore
 
     return trainer
@@ -208,6 +207,7 @@ def trainable(
         enable_logging=not ray_tune,
         # TuneReportCheckpointCallback will handle checkpointing and logging
         use_gpu=fixed_params["use_gpu"],
+        devices=fixed_params["devices"],
         ray_tune=ray_tune,
     )
 
@@ -231,10 +231,12 @@ def trainable(
         # Test
         print("---------------------------------------")
         print("Testing ...")
-        # The length of the loss_list corresponds to the number of dataloaders used.
-        loss_list = tester.test(model, test_dl)
-        test_loss = loss_list[0]["test_loss"]
-        print(f"Test loss: {test_loss}")
+        print("### Train loss: ###")
+        tester.test(model, dataloaders=train_dl)
+        print("### Validation loss: ###")
+        tester.test(model, dataloaders=val_dl)
+        print("### Test loss: ###")  # The last one will overwrite the previous ones
+        tester.test(model, dataloaders=test_dl)
 
         # Predict
         print("---------------------------------------")
@@ -250,6 +252,9 @@ if __name__ == "__main__":
     # use_gpu = False
     use_gpu = True
 
+    devices = 1
+    # devices = "auto" # use all available GPUs
+
     epochs = 3
     # epochs = 1
     """-----------------------------------------------"""
@@ -260,6 +265,7 @@ if __name__ == "__main__":
         "metrics": ["cross_entropy", "accuracy"],
         # We must initialize the torchmetrics inside the model
         "use_gpu": use_gpu,  # if True, please use script to run the code
+        "devices": devices,  # only used when use_gpu=True
     }
     tunable_params = {
         "batch_size": 256,
@@ -274,7 +280,7 @@ if __name__ == "__main__":
         tunable_params["num_conv_layers"] = 3
 
     # Set all random seeds (Python, NumPy, PyTorch)
-    L.seed_everything(seed=0)
+    L.seed_everything(seed=42, workers=True)
 
     # Set the precision of the matrix multiplication
     torch.set_float32_matmul_precision("high")
