@@ -91,9 +91,9 @@ class LightningModuleWrapper(L.LightningModule):
         loss = self.loss(y_pred, y)
 
         # Logging
-        # sync_dist = False if mode == "train" else True
-        sync_dist = True
-        log_params = {"sync_dist": sync_dist, "prog_bar": True, "on_epoch": True}
+        # (when training, on_epoch=True, on_step=True)
+        # (when validating/testing, on_epoch=True, on_step=False)
+        log_params = {"prog_bar": True, "on_epoch": True}  # on_step=True when testing
         self.log(f"{mode}_loss", loss, **log_params)
         for metric in self.hparams.metrics:  # type: ignore
             self.log(f"{mode}_{metric}", getattr(self, metric)(y_pred, y), **log_params)
