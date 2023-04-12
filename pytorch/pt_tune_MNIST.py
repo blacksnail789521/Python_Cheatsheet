@@ -94,8 +94,8 @@ if __name__ == "__main__":
     use_gpu = True
 
     # num_trials = 100
-    num_trials = 20
-    # num_trials = 1
+    # num_trials = 20
+    num_trials = 4
 
     max_concurrent_trials = 4
     # max_concurrent_trials = 1
@@ -123,6 +123,8 @@ if __name__ == "__main__":
     }
     if fixed_params["model_name"] == "MLP":
         tunable_params["num_layers"] = tune.choice([2, 3, 4])
+        tunable_params["test"] = tune.choice(["[1, 1]", "[2, 2]"])
+        # Use ast.literal_eval to convert the string to a list
     elif fixed_params["model_name"] == "CNN":
         tunable_params["num_conv_layers"] = tune.choice([1, 2, 3])
 
