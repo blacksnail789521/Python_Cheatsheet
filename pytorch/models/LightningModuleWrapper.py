@@ -16,6 +16,7 @@ class LightningModuleWrapper(L.LightningModule):
         lr: float,
         loss: str,
         metrics: list[str],
+        **kwargs,
     ):
         super().__init__()
         self.nn_model = nn_model

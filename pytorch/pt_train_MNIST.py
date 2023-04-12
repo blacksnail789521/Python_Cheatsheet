@@ -166,13 +166,12 @@ def trainable(
     # Get the nn_model
     nn_model = get_nn_model(tunable_params, fixed_params)
 
+    # Convert to the lightning module
     model = LightningModuleWrapper(
         nn_model=nn_model,
-        l2_weight=tunable_params["l2_weight"],
-        optimizer=tunable_params["optimizer"],
-        lr=tunable_params["lr"],
         loss=fixed_params["loss"],
         metrics=fixed_params["metrics"],
+        **tunable_params,
     )
     if not ray_tune:
         print(model)
