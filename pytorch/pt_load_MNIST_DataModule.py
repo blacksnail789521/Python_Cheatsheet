@@ -22,7 +22,7 @@ class MNIST_DataModule(L.LightningDataModule):
     ) -> None:
         super().__init__()
         self.save_hyperparameters(
-            ignore=["data_dir"]
+            ignore=["data_dir", "shuffle", "max_concurrent_trials"]
         )  # We can access the hyperparameters via self.hparams
         self.data_dir = data_dir
         self.transform = transforms.Compose(
