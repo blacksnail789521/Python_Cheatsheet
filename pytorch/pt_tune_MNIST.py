@@ -16,8 +16,6 @@ from pt_train_MNIST import trainable
 def tune_models(
     tunable_params: dict,
     fixed_params: dict,
-    num_trials: int = 10,
-    max_concurrent_trials: int = 1,
 ) -> pd.DataFrame:
     """
     1. Define the search space (tunable_params)
@@ -47,7 +45,8 @@ def tune_models(
                 data_dir=str(Path.cwd()),  # Avoid redownloading the data
             ),
             resources={
-                "cpu": multiprocessing.cpu_count() // max_concurrent_trials,
+                "cpu": multiprocessing.cpu_count()
+                // fixed_params["max_concurrent_trials"],
                 "gpu": 1
                 if fixed_params["use_gpu"]
                 else 0,  # We can only use 1 GPU with ddp in Lightning 2.0.0
@@ -55,7 +54,7 @@ def tune_models(
         ),
         param_space=tunable_params,
         tune_config=tune.TuneConfig(
-            num_samples=num_trials,
+            num_samples=fixed_params["num_trials"],
             # metric="val_loss",
             # mode="min",
             metric="val_accuracy",
@@ -66,7 +65,9 @@ def tune_models(
                 # max_t=100, # (default) max epochs
                 # grace_period=1, # (default) min epochs
             ),
-            max_concurrent_trials=max_concurrent_trials,  # default = 0 (unlimited)
+            max_concurrent_trials=fixed_params[
+                "max_concurrent_trials"
+            ],  # default = 0 (unlimited)
         ),
         run_config=air.RunConfig(
             name=str(default_root_dir.name),
@@ -85,13 +86,32 @@ def tune_models(
 
 
 if __name__ == "__main__":
+    """-----------------------------------------------"""
+    model_name = "MLP"
+    # model_name = "CNN"
+
+    # use_gpu = False
+    use_gpu = True
+
+    # num_trials = 100
+    num_trials = 20
+    # num_trials = 1
+
+    max_concurrent_trials = 4
+    # max_concurrent_trials = 1
+    """-----------------------------------------------"""
+
     fixed_params = {
-        # "model_name": "MLP",
-        "model_name": "CNN",
+        "model_name": model_name,
         "loss": "cross_entropy",
         "metrics": ["cross_entropy", "accuracy"],
         # We must initialize the torchmetrics inside the model
-        "use_gpu": True,  # if True, please use script to run the code
+        "use_gpu": use_gpu,  # if True, please use script to run the code
+        # ------------------------------------------------------------
+        # The above parameters are shared for both training and tuning
+        # ------------------------------------------------------------
+        "num_trials": num_trials,
+        "max_concurrent_trials": max_concurrent_trials,
     }
     tunable_params = {
         # "batch_size": tune.choice([32, 64, 128, 256, 512]),
@@ -113,8 +133,6 @@ if __name__ == "__main__":
     torch.set_float32_matmul_precision("high")
 
     # Tune the model
-    results_df = tune_models(
-        tunable_params, fixed_params, num_trials=100, max_concurrent_trials=4
-    )
+    results_df = tune_models(tunable_params, fixed_params)
 
     print("### Done ###")

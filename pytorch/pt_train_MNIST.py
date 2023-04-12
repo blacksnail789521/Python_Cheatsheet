@@ -43,7 +43,7 @@ def train_model(
     additional_callbacks: list = [],
     use_gpu: bool = False,
     devices: int | list[int] | str = "auto",
-    ray_tune: bool = False,
+    verbose: bool = False,
 ) -> L.Trainer:
     # Set callbacks
     callbacks = []
@@ -60,7 +60,7 @@ def train_model(
         )
         callbacks.append(model_checkpoint)
     early_stopping_with_TerminateOnNaN = EarlyStopping(
-        monitor="val_loss", mode="min", patience=3, verbose=True
+        monitor="val_loss", mode="min", patience=3, verbose=verbose
     )
     callbacks.append(early_stopping_with_TerminateOnNaN)
     callbacks.extend(additional_callbacks)
@@ -141,7 +141,7 @@ def get_nn_model(tunable_params: dict, fixed_params: dict) -> nn.Module:
 
 
 def trainable(
-    tunable_params: dict,
+    tunable_params: dict,  # Place tunable parameters first for Ray Tune
     fixed_params: dict,
     ray_tune: bool = True,
     use_lightning_data_module: bool = True,
@@ -149,11 +149,17 @@ def trainable(
 ) -> None:
     # Load data
     if not use_lightning_data_module:
-        train_dl, test_dl = load_MNIST(batch_size=tunable_params["batch_size"])
+        train_dl, test_dl = load_MNIST(
+            batch_size=tunable_params["batch_size"],
+            max_concurrent_trials=fixed_params.get("max_concurrent_trials", 1),
+        )
         val_dl = test_dl
     else:
         dm = MNIST_DataModule(
-            data_dir=data_dir, batch_size=tunable_params["batch_size"], split=0.8
+            data_dir=data_dir,
+            batch_size=tunable_params["batch_size"],
+            split=0.8,
+            max_concurrent_trials=fixed_params.get("max_concurrent_trials", 1),
         )
         dm.prepare_data()
         dm.setup()
@@ -206,8 +212,8 @@ def trainable(
         enable_logging=not ray_tune,
         # TuneReportCheckpointCallback will handle checkpointing and logging
         use_gpu=fixed_params["use_gpu"],
-        devices=fixed_params["devices"],
-        ray_tune=ray_tune,
+        devices=fixed_params.get("devices", 1),
+        verbose=fixed_params.get("verbose", False),
     )
 
     if trainer.is_global_zero and not ray_tune:  # Make sure we're at the root rank
@@ -256,6 +262,9 @@ if __name__ == "__main__":
 
     epochs = 3
     # epochs = 1
+
+    # verbose = False
+    verbose = True
     """-----------------------------------------------"""
 
     fixed_params = {
@@ -264,7 +273,11 @@ if __name__ == "__main__":
         "metrics": ["cross_entropy", "accuracy"],
         # We must initialize the torchmetrics inside the model
         "use_gpu": use_gpu,  # if True, please use script to run the code
+        # ------------------------------------------------------------
+        # The above parameters are shared for both training and tuning
+        # ------------------------------------------------------------
         "devices": devices,  # only used when use_gpu=True
+        "verbose": verbose,
     }
     tunable_params = {
         "batch_size": 256,

@@ -48,6 +48,8 @@ def load_MNIST(
     one_hot: bool = False,
     batch_size: int = 256,
     use_numpy: bool = False,
+    shuffle: bool = True,
+    max_concurrent_trials: int = 1,
 ) -> tuple[DataLoader, DataLoader]:
     if use_numpy:
         # from tensorflow.keras.datasets import mnist
@@ -80,13 +82,18 @@ def load_MNIST(
         )
 
     # Get loader
-    dl_config = {
+    train_dl_params = {
         "batch_size": batch_size,
-        "num_workers": multiprocessing.cpu_count(),
-        "persistent_workers": True,
+        "shuffle": shuffle,
+        "num_workers": multiprocessing.cpu_count() // max_concurrent_trials,
+        "persistent_workers": True
+        if max_concurrent_trials == 1
+        else False,  # turn off with ray tune
     }
-    train_dl = DataLoader(train_ds, shuffle=True, **dl_config)
-    test_dl = DataLoader(test_ds, shuffle=False, **dl_config)
+    non_train_dl_params = train_dl_params.copy()
+    non_train_dl_params["shuffle"] = False
+    train_dl = DataLoader(train_ds, **train_dl_params)
+    test_dl = DataLoader(test_ds, **non_train_dl_params)
 
     return train_dl, test_dl
 

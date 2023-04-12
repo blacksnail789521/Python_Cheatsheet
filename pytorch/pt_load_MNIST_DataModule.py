@@ -13,7 +13,12 @@ import pytorch_lightning as L
 
 class MNIST_DataModule(L.LightningDataModule):
     def __init__(
-        self, data_dir: str = "./", batch_size: int = 256, split: float = 0.8
+        self,
+        data_dir: str = "./",
+        batch_size: int = 256,
+        split: float = 0.8,
+        shuffle: bool = True,
+        max_concurrent_trials: int = 1,
     ) -> None:
         super().__init__()
         self.save_hyperparameters(
@@ -23,11 +28,16 @@ class MNIST_DataModule(L.LightningDataModule):
         self.transform = transforms.Compose(
             [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
         )
-        self.dl_config = {
+        self.train_dl_params = {
             "batch_size": batch_size,
-            "num_workers": multiprocessing.cpu_count(),
-            "persistent_workers": True,
+            "shuffle": shuffle,
+            "num_workers": multiprocessing.cpu_count() // max_concurrent_trials,
+            "persistent_workers": True
+            if max_concurrent_trials == 1
+            else False,  # turn off with ray tune
         }
+        self.non_train_dl_params = self.train_dl_params.copy()
+        self.non_train_dl_params["shuffle"] = False
 
     def prepare_data(self) -> None:
         # download
@@ -49,16 +59,16 @@ class MNIST_DataModule(L.LightningDataModule):
             self.ds_test = MNIST(self.data_dir, train=False, transform=self.transform)
 
     def train_dataloader(self) -> DataLoader:
-        return DataLoader(self.ds_train, shuffle=True, **self.dl_config)
+        return DataLoader(self.ds_train, **self.train_dl_params)
 
     def val_dataloader(self) -> DataLoader:
-        return DataLoader(self.ds_val, shuffle=False, **self.dl_config)
+        return DataLoader(self.ds_val, **self.non_train_dl_params)
 
     def test_dataloader(self) -> DataLoader:
-        return DataLoader(self.ds_test, shuffle=False, **self.dl_config)
+        return DataLoader(self.ds_test, **self.non_train_dl_params)
 
     def predict_dataloader(self) -> DataLoader:
-        return DataLoader(self.ds_test, shuffle=False, **self.dl_config)
+        return DataLoader(self.ds_test, **self.non_train_dl_params)
 
 
 def show_data(dataloader: DataLoader) -> None:
