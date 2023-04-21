@@ -219,9 +219,13 @@ def trainable(
     if trainer.is_global_zero and not ray_tune:  # Make sure we're at the root rank
         # Load every information we need from the trainer
         # (best_model, logger, log_dir)
-        nn_model = get_nn_model(tunable_params, fixed_params)
-        model = model.load_from_checkpoint(
-            trainer.checkpoint_callback.best_model_path, nn_model=nn_model  # type: ignore
+        # nn_model = get_nn_model(tunable_params, fixed_params)
+        # model = model.load_from_checkpoint(
+        #     trainer.checkpoint_callback.best_model_path, nn_model=nn_model  # type: ignore
+        # )
+        model = LightningModuleWrapper.load_from_checkpoint(
+            trainer.checkpoint_callback.best_model_path,  # type: ignore
+            nn_model=get_nn_model(tunable_params, fixed_params),
         )
         logger = trainer.logger  # type: ignore
         log_dir = Path(logger.log_dir)  # type: ignore
