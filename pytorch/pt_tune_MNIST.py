@@ -29,7 +29,6 @@ def tune_models(
             "val_acc",
             "test_loss",
             "test_acc",
-            "training_iteration",
         ]
     )
 
@@ -41,6 +40,7 @@ def tune_models(
         },
         config=tunable_params,
         num_samples=num_trials,
+        max_concurrent_trials=max_concurrent_trials,
         scheduler=scheduler,
         progress_reporter=reporter,
         local_dir=f"./ray_results/{fixed_params['model_name']}",
