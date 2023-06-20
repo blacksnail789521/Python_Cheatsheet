@@ -5,3 +5,5 @@ ray_results/
 saved_models/
 model.png
 MNIST/
+plots/
+checkpoints/
