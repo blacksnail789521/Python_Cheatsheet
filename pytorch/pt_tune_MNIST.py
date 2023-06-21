@@ -12,14 +12,12 @@ from pt_train_MNIST import trainable
 def tune_models(
     tunable_params: dict,
     fixed_params: dict,
-    metric: str = "val_loss",
-    mode: str = "min",
     num_trials: int = 10,
     max_concurrent_trials: int = 1,
 ) -> None:
     scheduler = ASHAScheduler(
-        metric=metric,
-        mode=mode,
+        metric="val_loss",
+        mode="min",
         # max_t=100, # (default) max epochs
         # grace_period=1, # (default) min epochs
     )
@@ -32,8 +30,8 @@ def tune_models(
             "test_loss",
             "test_acc",
         ],
-        metric=metric,
-        mode=mode,
+        metric="test_acc", # Normally, we only care about test results
+        mode="min",
         sort_by_metric=True,
     )
 
