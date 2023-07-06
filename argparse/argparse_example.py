@@ -49,6 +49,13 @@ def parse_args() -> argparse.Namespace:
 
     """----------------------------------------------------------------------"""
 
+    # parser.add_argument(
+    #     "--first_k_layers",
+    #     type=int,
+    #     help="the first k layers",
+    #     default=1,
+    # ) # Don't use something starts with `f` in ipython
+
     # Allow unrecognized arguments
     args, _ = parser.parse_known_args()
 
