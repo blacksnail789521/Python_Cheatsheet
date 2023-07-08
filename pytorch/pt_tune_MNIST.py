@@ -14,6 +14,7 @@ def tune_models(
     fixed_params: dict,
     num_trials: int = 10,
     max_concurrent_trials: int = 1,
+    verbose: int = 1,
 ) -> None:
     scheduler = ASHAScheduler(
         metric="val_loss",
@@ -30,26 +31,35 @@ def tune_models(
             "test_loss",
             "test_acc",
         ],
-        metric="test_acc", # Normally, we only care about test results
+        metric="test_acc",  # Normally, we only care about test results
         mode="min",
         sort_by_metric=True,
     )
 
-    result = tune.run(
+    analysis = tune.run(
         tune.with_parameters(trainable, fixed_params=fixed_params),
         resources_per_trial={
             "cpu": multiprocessing.cpu_count() // max_concurrent_trials,
             "gpu": 1,
         },
+        # metric="val_loss", # We set metric and mode individually in scheduler and reporter
+        # mode="min",        # when we use different metrics for different purposes
         config=tunable_params,
         num_samples=num_trials,
         max_concurrent_trials=max_concurrent_trials,
         scheduler=scheduler,
         progress_reporter=reporter,
         local_dir=f"./ray_results/{fixed_params['model_name']}",
+        verbose=(
+            verbose
+            # 0: silent
+            # 1: only status updates
+            # 2: status and trial results
+            # 3: status and detailed trial results
+        ),
     )
 
-    best_trial = result.get_best_trial("val_loss", "min", "last")
+    best_trial = analysis.get_best_trial("val_loss", "min", "last")
     print("Best trial config: {}".format(best_trial.config))
     print(f"Best trial result: {best_trial.last_result}")
 
