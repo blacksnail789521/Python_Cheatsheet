@@ -1,23 +1,14 @@
 import argparse
 
 
-def change_dict_to_args(params):
-    parser = argparse.ArgumentParser()
-    for key in params.keys():
-        parser.add_argument("--" + key)
-
-    # create a list of command line args from the dictionary
-    args_list = [
-        item
-        for sublist in [["--" + k, v] for k, v in params.items()]
-        for item in sublist
-    ]
-
-    # parse the args
-    args = parser.parse_args(args_list)
+def change_dict_to_args(configs: dict) -> argparse.Namespace:
+    args = argparse.Namespace()
+    for key, value in configs.items():
+        setattr(args, key, value)
     return args
 
 
-params = {"arg1": "value1", "arg2": "value2"}
-args = change_dict_to_args(params)
-print(args)
+configs = {"arg1": "value1", "arg2": "value2", "params": {"A": 1, "B": "2"}}
+print(configs)
+configs = change_dict_to_args(configs)
+print(configs)
