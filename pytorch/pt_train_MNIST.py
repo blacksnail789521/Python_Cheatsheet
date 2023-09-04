@@ -6,6 +6,8 @@ from pathlib import Path
 import random
 from tqdm import tqdm
 import numpy as np
+import os
+import sys
 
 from pt_load_MNIST import load_MNIST, show_data
 from models.MLP import MLP
@@ -21,7 +23,7 @@ def train_model(
     epochs: int = 3,
     lr: float = 0.001,
     weight_decay: float = 0.0,
-) -> tuple[nn.Module, dict[str, float]]:
+) -> tuple[nn.Module, dict]:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
     criterion = nn.CrossEntropyLoss()
@@ -39,11 +41,11 @@ def train_model(
 
     # Train the model
     metrics = {
-        "train_loss": None,
-        "val_loss": None,
-        "val_acc": None,
-        "test_loss": None,
-        "test_acc": None,
+        "train_loss": [],
+        "val_loss": [],
+        "val_acc": [],
+        "test_loss": [],
+        "test_acc": [],
     }
     for epoch in range(epochs):
         model.train()
@@ -108,11 +110,15 @@ def train_model(
             torch.save((model.state_dict(), optimizer.state_dict()), checkpoint_path)
 
         # Save the metrics
-        metrics["train_loss"] = np.mean(train_losses)
-        metrics["val_loss"] = np.mean(val_losses)
-        metrics["val_acc"] = correct_val / total_val
-        metrics["test_loss"] = np.mean(test_losses)
-        metrics["test_acc"] = correct_test / total_test
+        metrics["train_loss"].append(np.mean(train_losses))
+        metrics["val_loss"].append(np.mean(val_losses))
+        metrics["val_acc"].append(correct_val / total_val)
+        metrics["test_loss"].append(np.mean(test_losses))
+        metrics["test_acc"].append(correct_test / total_test)
+    
+    # Use the last epoch's metrics
+    for key, value in metrics.items():
+        metrics[key] = value[-1]
 
     return model, metrics
 
@@ -155,20 +161,27 @@ def get_model(tunable_params: dict, fixed_params: dict) -> nn.Module:
 def trainable(
     tunable_params: dict,  # Place tunable parameters first for Ray Tune
     fixed_params: dict,
-    ray_tune: bool = True,
+    enable_ray_tune: bool = True,
 ) -> dict[str, float]:
+    # Disable print
+    if enable_ray_tune:
+        original_stdout = sys.stdout
+        original_stderr = sys.stderr
+        sys.stdout = open(os.devnull, "w")
+        sys.stderr = open(os.devnull, "w")
+
     # Load data
     train_dl, test_dl = load_MNIST(
         batch_size=tunable_params["batch_size"],
         max_concurrent_trials=fixed_params.get("max_concurrent_trials", 1),
     )
     val_dl = test_dl
-    if not ray_tune:
+    if not enable_ray_tune:
         show_data(train_dl)  # Show the data
 
     # Get the model
     model = get_model(tunable_params, fixed_params)
-    if not ray_tune:
+    if not enable_ray_tune:
         print(model)
 
     # Train
@@ -187,6 +200,13 @@ def trainable(
     print("---------------------------------------")
     print("Plotting predictions ...")
     plot_predictions(model, test_dl)
+
+    # Re-enable print
+    if enable_ray_tune:
+        sys.stdout.close()
+        sys.stderr.close()
+        sys.stdout = original_stdout  # type: ignore
+        sys.stderr = original_stderr  # type: ignore
 
     return metrics
 
@@ -227,7 +247,7 @@ if __name__ == "__main__":
     torch.set_float32_matmul_precision("high")
 
     # Train the model
-    metrics = trainable(tunable_params, fixed_params, ray_tune=False)
+    metrics = trainable(tunable_params, fixed_params, enable_ray_tune=False)
     print(metrics)
 
     print("### Done ###")

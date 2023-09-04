@@ -69,11 +69,11 @@ if __name__ == "__main__":
     model_name = "MLP"
     # model_name = "CNN"
 
-    num_trials = 10
+    num_trials = 100
     # num_trials = 3
 
-    # max_concurrent_trials = 4
-    max_concurrent_trials = 1
+    max_concurrent_trials = 4
+    # max_concurrent_trials = 1
     """-----------------------------------------------"""
 
     fixed_params = {
