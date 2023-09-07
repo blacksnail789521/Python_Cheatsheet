@@ -115,7 +115,7 @@ def train_model(
         metrics["val_acc"].append(correct_val / total_val)
         metrics["test_loss"].append(np.mean(test_losses))
         metrics["test_acc"].append(correct_test / total_test)
-    
+
     # Use the last epoch's metrics
     for key, value in metrics.items():
         metrics[key] = value[-1]

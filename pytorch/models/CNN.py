@@ -10,6 +10,7 @@ class CNN(nn.Module):
     def __init__(
         self,
         num_conv_layers: int = 2,
+        use_bn: bool = True,
     ) -> None:
         super().__init__()
 
@@ -44,7 +45,8 @@ class CNN(nn.Module):
 
         # First convolutional layer
         self.layers.append(nn.Conv2d(1, 32, kernel_size=3, padding=1))
-        self.layers.append(nn.BatchNorm2d(32))
+        if use_bn:
+            self.layers.append(nn.BatchNorm2d(32))
         self.layers.append(nn.ReLU(inplace=True))
         self.layers.append(nn.MaxPool2d(kernel_size=2, stride=2))
 
@@ -56,7 +58,8 @@ class CNN(nn.Module):
                     current_channels, current_channels * 2, kernel_size=3, padding=1
                 )
             )
-            self.layers.append(nn.BatchNorm2d(current_channels * 2))
+            if use_bn:
+                self.layers.append(nn.BatchNorm2d(current_channels * 2))
             self.layers.append(nn.ReLU(inplace=True))
             self.layers.append(nn.MaxPool2d(kernel_size=2, stride=2))
             current_channels *= 2

@@ -6,6 +6,7 @@ class MLP(nn.Module):
     def __init__(
         self,
         num_layers: int = 2,
+        use_bn: bool = True,
     ) -> None:
         super().__init__()
 
@@ -34,7 +35,8 @@ class MLP(nn.Module):
         current_dim = 28 * 28
         for _ in range(num_layers - 1):
             self.layers.append(nn.Linear(current_dim, 128))
-            self.layers.append(nn.BatchNorm1d(128))
+            if use_bn:
+                self.layers.append(nn.BatchNorm1d(128))
             self.layers.append(nn.ReLU(inplace=True))
             current_dim = 128
         self.layers.append(nn.Linear(current_dim, 10))
@@ -50,7 +52,7 @@ class MLP(nn.Module):
 
 
 if __name__ == "__main__":
-    model = MLP(num_layers=3)
+    model = MLP(num_layers=3, use_bn=False)
     print(model)
 
     x = torch.randn(32, 1, 28, 28)
