@@ -178,7 +178,8 @@ def suppress_print(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         # Don't need to execute this decorator if Ray Tune is not enabled
-        enable_ray_tune = kwargs.get("enable_ray_tune", True)
+        enable_ray_tune = kwargs.get("enable_ray_tune", None)
+        assert enable_ray_tune is not None, "enable_ray_tune should be specified"
         if not enable_ray_tune:
             return func(*args, **kwargs)
 
@@ -229,7 +230,8 @@ def terminate_early_trial(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         # Don't need to execute this decorator if Ray Tune is not enabled
-        enable_ray_tune = kwargs.get("enable_ray_tune", True)
+        enable_ray_tune = kwargs.get("enable_ray_tune", None)
+        assert enable_ray_tune is not None, "enable_ray_tune should be specified"
         if not enable_ray_tune:
             return func(*args, **kwargs)
 
@@ -380,8 +382,8 @@ def get_tunable_params(enable_ray_tune: bool = False) -> dict:
 
 if __name__ == "__main__":
     """-----------------------------------------------"""
-    # enable_ray_tune = False
-    enable_ray_tune = True
+    enable_ray_tune = False
+    # enable_ray_tune = True
 
     num_trials = 6
     # num_trials = 100
