@@ -177,22 +177,25 @@ def get_model(tunable_params: dict) -> nn.Module:
 def suppress_print(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
+        # Don't need to execute this decorator if Ray Tune is not enabled
         enable_ray_tune = kwargs.get("enable_ray_tune", True)
-        if enable_ray_tune:
-            original_stdout = sys.stdout
-            original_stderr = sys.stderr
-            sys.stdout = open(os.devnull, "w")
-            sys.stderr = open(os.devnull, "w")
-
-            result = func(*args, **kwargs)
-
-            sys.stdout.close()
-            sys.stderr.close()
-            sys.stdout = original_stdout
-            sys.stderr = original_stderr
-            return result
-        else:
+        if not enable_ray_tune:
             return func(*args, **kwargs)
+
+        # Disable printing
+        original_stdout = sys.stdout
+        original_stderr = sys.stderr
+        sys.stdout = open(os.devnull, "w")
+        sys.stderr = open(os.devnull, "w")
+
+        result = func(*args, **kwargs)
+
+        # Re-enable printing
+        sys.stdout.close()
+        sys.stderr.close()
+        sys.stdout = original_stdout
+        sys.stderr = original_stderr
+        return result
 
     return wrapper
 
@@ -225,6 +228,11 @@ def extract_model_params_into_metrics(func):
 def terminate_early_trial(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
+        # Don't need to execute this decorator if Ray Tune is not enabled
+        enable_ray_tune = kwargs.get("enable_ray_tune", True)
+        if not enable_ray_tune:
+            return func(*args, **kwargs)
+
         def extract_trial_id(working_dir):
             match = re.search(r"trainable_.{5}_([0-9]{5})_", working_dir)
             if match:
@@ -375,7 +383,7 @@ if __name__ == "__main__":
     # enable_ray_tune = False
     enable_ray_tune = True
 
-    num_trials = 4
+    num_trials = 6
     # num_trials = 100
 
     # max_concurrent_trials = 1
