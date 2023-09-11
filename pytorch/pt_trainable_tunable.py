@@ -298,7 +298,9 @@ def trainable(
     return return_metrics
 
 
-def tunable(tunable_params: dict, fixed_params: dict, verbose: int = 1) -> None:
+def tunable(
+    tunable_params: dict, fixed_params: dict, verbose: int = 1
+) -> tune.ExperimentAnalysis:
     # Set up reporter
     metric_columns = {
         "selected_model_params": "model_params",
@@ -337,6 +339,15 @@ def tunable(tunable_params: dict, fixed_params: dict, verbose: int = 1) -> None:
         local_dir="./ray_results",
         verbose=verbose,
     )
+
+    # Save analysis report as csv
+    df = analysis.results_df
+    df = df.drop(columns=["experiment_id", "hostname", "node_ip", "time_this_iter_s"])
+    df = df.sort_values(by=["test_acc"], ascending=False)
+    experiment_name = Path(str(analysis.get_best_logdir())).parts[-2]
+    df.to_csv(Path("ray_results", experiment_name, "analysis.csv"))
+
+    return analysis
 
 
 def get_tunable_params(enable_ray_tune: bool = False) -> dict:
@@ -382,8 +393,8 @@ def get_tunable_params(enable_ray_tune: bool = False) -> dict:
 
 if __name__ == "__main__":
     """-----------------------------------------------"""
-    enable_ray_tune = False
-    # enable_ray_tune = True
+    # enable_ray_tune = False
+    enable_ray_tune = True
 
     num_trials = 6
     # num_trials = 100
@@ -418,6 +429,6 @@ if __name__ == "__main__":
         ]
         print(table)
     else:
-        tunable(tunable_params, fixed_params)
+        analysis = tunable(tunable_params, fixed_params)
 
     print("### Done ###")
