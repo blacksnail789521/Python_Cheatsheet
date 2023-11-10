@@ -59,7 +59,7 @@ def train_model(
             if use_tqdm
             else train_dl
         )
-        for inputs, targets in iter_data:
+        for i, (inputs, targets) in enumerate(iter_data):
             inputs = inputs.to(device)
             targets = targets.to(device)
             optimizer.zero_grad()
