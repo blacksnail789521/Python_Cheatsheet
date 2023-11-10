@@ -54,9 +54,11 @@ def train_model(
         val_losses = []
         test_losses = []
 
-        iter_data = tqdm(
-            train_dl, desc=f"Epoch {epoch + 1}/{epochs}, Training Loss: {0}"
-        ) if use_tqdm else train_dl
+        iter_data = (
+            tqdm(train_dl, desc=f"Epoch {epoch + 1}/{epochs}, Training Loss: {0}")
+            if use_tqdm
+            else train_dl
+        )
         for inputs, targets in iter_data:
             inputs = inputs.to(device)
             targets = targets.to(device)
@@ -67,7 +69,7 @@ def train_model(
             optimizer.step()
             train_losses.append(loss.item())
             if use_tqdm:
-                iter_data.set_description(
+                iter_data.set_description(  # type: ignore
                     f"Epoch {epoch + 1}/{epochs}, Training Loss: {np.mean(train_losses)}"
                 )
 
