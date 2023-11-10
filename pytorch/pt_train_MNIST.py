@@ -23,6 +23,7 @@ def train_model(
     epochs: int = 3,
     lr: float = 0.001,
     weight_decay: float = 0.0,
+    use_tqdm: bool = True,
 ) -> tuple[nn.Module, dict]:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
@@ -53,10 +54,10 @@ def train_model(
         val_losses = []
         test_losses = []
 
-        progress = tqdm(
+        iter_data = tqdm(
             train_dl, desc=f"Epoch {epoch + 1}/{epochs}, Training Loss: {0}"
-        )
-        for inputs, targets in progress:
+        ) if use_tqdm else train_dl
+        for inputs, targets in iter_data:
             inputs = inputs.to(device)
             targets = targets.to(device)
             optimizer.zero_grad()
@@ -65,9 +66,10 @@ def train_model(
             loss.backward()
             optimizer.step()
             train_losses.append(loss.item())
-            progress.set_description(
-                f"Epoch {epoch + 1}/{epochs}, Training Loss: {np.mean(train_losses)}"
-            )
+            if use_tqdm:
+                iter_data.set_description(
+                    f"Epoch {epoch + 1}/{epochs}, Training Loss: {np.mean(train_losses)}"
+                )
 
         # Validate the model (both on validation and test sets)
         model.eval()
