@@ -49,7 +49,7 @@ def load_MNIST(
     batch_size: int = 256,
     use_numpy: bool = False,
     shuffle: bool = True,
-    max_concurrent_trials: int = 1,
+    num_workers: int = multiprocessing.cpu_count(),
 ) -> tuple[DataLoader, DataLoader]:
     if use_numpy:
         # from tensorflow.keras.datasets import mnist
@@ -82,20 +82,20 @@ def load_MNIST(
         )
 
     # Get loader
-    train_dl_params = {
+    train_loader_params = {
         "batch_size": batch_size,
         "shuffle": shuffle,
-        "num_workers": multiprocessing.cpu_count() // max_concurrent_trials,
-        "persistent_workers": True
-        if max_concurrent_trials == 1
-        else False,  # turn off with ray tune
+        "num_workers": num_workers,
+        # "persistent_workers": True
+        # if max_concurrent_trials == 1
+        # else False,  # turn off with ray tune
     }
-    non_train_dl_params = train_dl_params.copy()
-    non_train_dl_params["shuffle"] = False
-    train_dl = DataLoader(train_ds, **train_dl_params)
-    test_dl = DataLoader(test_ds, **non_train_dl_params)
+    non_train_loader_params = train_loader_params.copy()
+    non_train_loader_params["shuffle"] = False
+    train_loader = DataLoader(train_ds, **train_loader_params)
+    test_loader = DataLoader(test_ds, **non_train_loader_params)
 
-    return train_dl, test_dl
+    return train_loader, test_loader
 
 
 def show_data(dataloader: DataLoader) -> None:
@@ -116,7 +116,8 @@ def show_data(dataloader: DataLoader) -> None:
 
 if __name__ == "__main__":
     # Load data
-    train_dl, test_dl = load_MNIST(batch_size=256, use_numpy=False)
+    train_loader, test_loader = load_MNIST(batch_size=256, use_numpy=False)
+    # train_loader, test_loader = load_MNIST(batch_size=256, use_numpy=True)
 
     # Show the data
-    show_data(train_dl)
+    show_data(train_loader)
