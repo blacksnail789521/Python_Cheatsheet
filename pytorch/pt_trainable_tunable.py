@@ -197,9 +197,12 @@ if __name__ == "__main__":
 
     # start_trial_id = 0
     start_trial_id = 4
+
+    use_self_defined_params = False
+    # use_self_defined_params = True  # use this to debug
     """-----------------------------------------------"""
 
-    # Get fixed and tunable parameters
+    # Setup fixed params
     fixed_params = {
         "num_workers": 0,
         "use_tqdm": True,
@@ -209,7 +212,13 @@ if __name__ == "__main__":
         "gpus": gpus,
         "start_trial_id": start_trial_id,
     }
+
+    # Setup tunable params
     tunable_params = get_tunable_params(enable_ray_tune)
+    if use_self_defined_params and enable_ray_tune == False:
+        # TODO: add self-defined params here to debug
+        # Remember to turn on use_self_defined_params and turn off enable_ray_tune
+        tunable_params = {}
 
     # Set all random seeds (Python, NumPy, PyTorch)
     set_seed(42)
