@@ -38,7 +38,6 @@ def trainable(
     tunable_params: dict,  # Place tunable parameters first for Ray Tune
     fixed_params: dict,
     enable_ray_tune: bool = True,
-    start_trial_id: int = 0,
 ) -> dict:
     # Set configs
     configs = change_dict_to_args({**fixed_params, **tunable_params})
@@ -189,14 +188,14 @@ if __name__ == "__main__":
     # enable_ray_tune = False
     enable_ray_tune = True
 
-    num_trials = 4
+    num_trials = 10
     # num_trials = 100
 
     # gpus = "0"
     gpus = "0,1,2,3"
 
     # start_trial_id = 0
-    start_trial_id = 4
+    start_trial_id = 8
 
     use_self_defined_params = False
     # use_self_defined_params = True  # use this to debug
