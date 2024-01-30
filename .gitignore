@@ -7,3 +7,4 @@ model.png
 MNIST/
 plots/
 checkpoints/
+_test*
