@@ -47,9 +47,9 @@ def tune_models(
             resources={
                 "cpu": multiprocessing.cpu_count()
                 // fixed_params["max_concurrent_trials"],
-                "gpu": 1
-                if fixed_params["use_gpu"]
-                else 0,  # We can only use 1 GPU with ddp in Lightning 2.0.0
+                "gpu": (
+                    1 if fixed_params["use_gpu"] else 0
+                ),  # We can only use 1 GPU with ddp in Lightning 2.0.0
             },
         ),
         param_space=tunable_params,
@@ -126,7 +126,7 @@ if __name__ == "__main__":
         tunable_params["test"] = tune.choice(["[1, 1]", "[2, 2]"])
         # Use ast.literal_eval to convert the string to a list
     elif fixed_params["model_name"] == "CNN":
-        tunable_params["num_conv_layers"] = tune.choice([1, 2, 3])
+        tunable_params["num_layers"] = tune.choice([1, 2, 3])
 
     # Set all random seeds (Python, NumPy, PyTorch)
     L.seed_everything(seed=42, workers=True)

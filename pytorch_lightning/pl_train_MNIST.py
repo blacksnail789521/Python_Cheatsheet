@@ -79,9 +79,9 @@ def train_model(
         device_params["accelerator"] = "gpu"
         device_params["devices"] = devices
         # device_params["strategy"] = "ddp"  # Since 2.0.0, we need to use ddp
-        device_params[
-            "strategy"
-        ] = "ddp_find_unused_parameters_false"  # Allow to have unused parameters
+        device_params["strategy"] = (
+            "ddp_find_unused_parameters_false"  # Allow to have unused parameters
+        )
     trainer = L.Trainer(
         default_root_dir=default_root_dir,
         max_epochs=epochs,
@@ -133,7 +133,7 @@ def get_nn_model(tunable_params: dict, fixed_params: dict) -> nn.Module:
     if fixed_params["model_name"] == "MLP":
         nn_model = MLP(tunable_params["num_layers"])
     elif fixed_params["model_name"] == "CNN":
-        nn_model = CNN(tunable_params["num_conv_layers"])
+        nn_model = CNN(tunable_params["num_layers"])
     else:
         raise ValueError(f"Unknown model name: {fixed_params['model_name']}")
 
@@ -293,7 +293,7 @@ if __name__ == "__main__":
     if fixed_params["model_name"] == "MLP":
         tunable_params["num_layers"] = 3
     elif fixed_params["model_name"] == "CNN":
-        tunable_params["num_conv_layers"] = 3
+        tunable_params["num_layers"] = 3
 
     # Set all random seeds (Python, NumPy, PyTorch)
     L.seed_everything(seed=42, workers=True)

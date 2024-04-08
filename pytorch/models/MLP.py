@@ -3,11 +3,7 @@ import torch.nn as nn
 
 
 class MLP(nn.Module):
-    def __init__(
-        self,
-        num_layers: int = 2,
-        use_bn: bool = True,
-    ) -> None:
+    def __init__(self, num_layers: int, use_bn: bool) -> None:
         super().__init__()
 
         assert (
@@ -52,7 +48,7 @@ class MLP(nn.Module):
 
 
 if __name__ == "__main__":
-    model = MLP(num_layers=3, use_bn=False)
+    model = MLP(num_layers=3, use_bn=True)
     print(model)
 
     x = torch.randn(32, 1, 28, 28)

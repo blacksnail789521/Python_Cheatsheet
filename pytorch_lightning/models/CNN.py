@@ -9,11 +9,11 @@ import torch.nn as nn
 class CNN(nn.Module):
     def __init__(
         self,
-        num_conv_layers: int = 2,
+        num_layers: int = 2,
     ) -> None:
         super().__init__()
 
-        assert 1 <= num_conv_layers <= 3, (
+        assert 1 <= num_layers <= 3, (
             "We should have at least one convolutional layer.\n"
             "Also, we don't want to have too many convolutional layers \n"
             "because we double the number of channels each time."
@@ -50,7 +50,7 @@ class CNN(nn.Module):
 
         # Additional convolutional layers
         current_channels = 32
-        for _ in range(num_conv_layers - 1):
+        for _ in range(num_layers - 1):
             self.layers.append(
                 nn.Conv2d(
                     current_channels, current_channels * 2, kernel_size=3, padding=1
@@ -65,7 +65,7 @@ class CNN(nn.Module):
 
         # Fully connected layer
         self.layers.append(
-            nn.Linear(current_channels * (28 // (2**num_conv_layers)) ** 2, 10)
+            nn.Linear(current_channels * (28 // (2**num_layers)) ** 2, 10)
         )
         # self.layers.append(nn.Softmax(dim=1))  # Not needed for nn.CrossEntropyLoss()
 
@@ -77,7 +77,7 @@ class CNN(nn.Module):
 
 
 if __name__ == "__main__":
-    model = CNN(num_conv_layers=4)
+    model = CNN(num_layers=4)
     print(model)
 
     x = torch.randn(128, 1, 28, 28)

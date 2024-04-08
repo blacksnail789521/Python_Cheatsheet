@@ -2,19 +2,13 @@ import torch
 import torch.nn as nn
 
 
-import torch
-import torch.nn as nn
-
-
 class CNN(nn.Module):
-    def __init__(
-        self,
-        num_conv_layers: int = 2,
-        use_bn: bool = True,
-    ) -> None:
+    def __init__(self, num_conv_layers: int, use_bn: bool) -> None:
         super().__init__()
 
-        assert num_conv_layers >= 1, "We should have at least one convolutional layer."
+        assert (
+            num_conv_layers >= 1
+        ), "We should have at least one convolutional layer."
         assert num_conv_layers <= 3, (
             "We don't want to have too many convolutional layers (<= 3) \n"
             "because we double the number of channels each time."
@@ -80,7 +74,7 @@ class CNN(nn.Module):
 
 
 if __name__ == "__main__":
-    model = CNN(num_conv_layers=3)
+    model = CNN(num_conv_layers=3, use_bn=True)
     print(model)
 
     x = torch.randn(128, 1, 28, 28)
