@@ -67,7 +67,7 @@ def load_MNIST(
     else:
         # Get ds
         train_ds = MNIST(
-            root=str(Path.cwd()),
+            root=str(Path.cwd() / "dataset"),
             train=True,
             download=True,
             transform=transforms.ToTensor(),
@@ -75,7 +75,7 @@ def load_MNIST(
             # a torch.FloatTensor of shape (C x H x W) in the range [0.0, 1.0]
         )
         test_ds = MNIST(
-            root=str(Path.cwd()),
+            root=str(Path.cwd() / "dataset"),
             train=False,
             download=True,
             transform=transforms.ToTensor(),

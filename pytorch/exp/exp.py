@@ -7,11 +7,11 @@ from tqdm import tqdm
 import numpy as np
 from sklearn.metrics import accuracy_score, f1_score, cohen_kappa_score
 
-from load_MNIST import load_MNIST, show_data
+from dataset_loader.load_MNIST import load_MNIST, show_data
 from models.MLP import MLP
 from models.CNN import CNN
-from visual import visualize_metric
-from tools import EarlyStopping
+from utils.visual import visualize_metric
+from utils.tools import EarlyStopping
 
 MODEL_MAP = {
     "MLP": MLP,

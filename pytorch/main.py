@@ -2,9 +2,9 @@ import torch
 import argparse
 from pathlib import Path
 
-from exp import Exp_Classification
-from visual import plot_predictions
-from tools import set_seed, print_formatted_dict, select_best_metrics
+from exp.exp import Exp_Classification
+from utils.visual import plot_predictions
+from utils.tools import set_seed, print_formatted_dict, select_best_metrics
 
 
 def get_args_from_parser() -> argparse.Namespace:

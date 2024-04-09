@@ -6,8 +6,8 @@ import argparse
 from typing import Callable
 import pandas as pd
 
-from tools import set_seed, print_formatted_dict
-from ray_tune_tools import suppress_print, terminate_early_trial
+from utils.tools import set_seed, print_formatted_dict
+from utils.ray_tune_tools import suppress_print, terminate_early_trial
 from main import get_args_from_parser
 from main import trainable as trainable_without_ray_tune
 
