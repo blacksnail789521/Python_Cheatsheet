@@ -111,6 +111,7 @@ def get_args_from_parser() -> argparse.Namespace:
         default="StepLR",
         help="learning rate scheduler",
         choices=[
+            "none",
             "StepLR",  # step_size=30, gamma=0.1. Decays the LR by gamma every step_size epochs.
             "ExponentialLR",  # gamma=0.95
             "ReduceLROnPlateau",  # factor=0.1, patience=10
@@ -267,7 +268,8 @@ if __name__ == "__main__":
         "weight_decay": 0.01,
         # "epochs": 1,
         "epochs": 3,
-        "lr_scheduler": "StepLR",
+        "lr_scheduler": "none",
+        # "lr_scheduler": "StepLR",
         # "lr_scheduler": "ReduceLROnPlateau",
         "lr_scheduler_params": {
             "StepLR": {

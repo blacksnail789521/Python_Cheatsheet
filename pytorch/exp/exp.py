@@ -60,16 +60,19 @@ class Exp_Classification(object):
         )
 
         # scheduler
-        lr_scheduler_params = self.args.lr_scheduler_params[self.args.lr_scheduler]
-        if self.args.lr_scheduler == "CyclicLR":
-            lr_scheduler_params["base_lr"] = self.args.learning_rate
-            lr_scheduler_params["cycle_momentum"] = True if self.args.optim == "SGD" else False
-        elif self.args.lr_scheduler == "OneCycleLR":
-            lr_scheduler_params["steps_per_epoch"] = len(self.train_loader)
-            lr_scheduler_params["epochs"] = self.args.epochs
-        self.scheduler = getattr(optim.lr_scheduler, self.args.lr_scheduler)(
-            self.optimizer, **lr_scheduler_params
-        )
+        if self.args.lr_scheduler != "none":
+            lr_scheduler_params = self.args.lr_scheduler_params[self.args.lr_scheduler]
+            if self.args.lr_scheduler == "CyclicLR":
+                lr_scheduler_params["base_lr"] = self.args.learning_rate
+                lr_scheduler_params["cycle_momentum"] = (
+                    True if self.args.optim == "SGD" else False
+                )
+            elif self.args.lr_scheduler == "OneCycleLR":
+                lr_scheduler_params["steps_per_epoch"] = len(self.train_loader)
+                lr_scheduler_params["epochs"] = self.args.epochs
+            self.scheduler = getattr(optim.lr_scheduler, self.args.lr_scheduler)(
+                self.optimizer, **lr_scheduler_params
+            )
 
     def _set_early_stopping(self):
         self.early_stopping = EarlyStopping(
@@ -132,7 +135,6 @@ class Exp_Classification(object):
                         f"Epoch {epoch + 1}/{self.args.epochs}, Training Loss: {np.mean(train_losses)}"
                     )
 
-
             # * At the end of each epoch, we get all the metrics
             train_loss, train_acc, train_f1, train_kappa = self.get_metrics(
                 self.train_loader
@@ -141,9 +143,7 @@ class Exp_Classification(object):
             metrics["train"]["acc"].append(train_acc)
             metrics["train"]["mf1"].append(train_f1)
             metrics["train"]["kappa"].append(train_kappa)
-            val_loss, val_acc, val_f1, val_kappa = self.get_metrics(
-                self.val_loader
-            )
+            val_loss, val_acc, val_f1, val_kappa = self.get_metrics(self.val_loader)
             metrics["val"]["loss"].append(val_loss)
             metrics["val"]["acc"].append(val_acc)
             metrics["val"]["mf1"].append(val_f1)
@@ -167,13 +167,14 @@ class Exp_Classification(object):
                 break
 
             # * Learning rate scheduler
-            previous_lr = self.optimizer.param_groups[0]["lr"]
-            self.scheduler.step(val_loss)
-            current_lr = self.optimizer.param_groups[0]["lr"]
-            print(
-                f"Epoch {epoch + 1}/{self.args.epochs}, Learning Rate: {previous_lr} -> {current_lr}"
-                f" (lr_scheduler: {self.args.lr_scheduler})"
-            )
+            if self.args.lr_scheduler != "none":
+                previous_lr = self.optimizer.param_groups[0]["lr"]
+                self.scheduler.step(val_loss)
+                current_lr = self.optimizer.param_groups[0]["lr"]
+                print(
+                    f"Epoch {epoch + 1}/{self.args.epochs}, Learning Rate: {previous_lr} -> {current_lr}"
+                    f" (lr_scheduler: {self.args.lr_scheduler})"
+                )
 
         return metrics
 
@@ -203,8 +204,10 @@ class Exp_Classification(object):
                     total_loss += loss.item()
                     total_samples += len(x)
 
-                pred = torch.argmax(y_pred, dim=1).detach().cpu().numpy()
-                true = y.detach().cpu().numpy()
+                pred = (
+                    torch.argmax(y_pred, dim=-1).detach().cpu().numpy()
+                )  # (B, K) -> (B,)
+                true = y.detach().cpu().numpy()  # (B,)
 
                 total_preds.extend(pred)
                 total_trues.extend(true)
