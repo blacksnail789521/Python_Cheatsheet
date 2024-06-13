@@ -268,8 +268,8 @@ if __name__ == "__main__":
         "weight_decay": 0.01,
         # "epochs": 1,
         "epochs": 3,
-        "lr_scheduler": "none",
-        # "lr_scheduler": "StepLR",
+        # "lr_scheduler": "none",
+        "lr_scheduler": "StepLR",
         # "lr_scheduler": "ReduceLROnPlateau",
         "lr_scheduler_params": {
             "StepLR": {

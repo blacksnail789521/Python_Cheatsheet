@@ -169,11 +169,12 @@ class Exp_Classification(object):
             # * Learning rate scheduler
             if self.args.lr_scheduler != "none":
                 previous_lr = self.optimizer.param_groups[0]["lr"]
-                self.scheduler.step(val_loss)
+                self.scheduler.step()
                 current_lr = self.optimizer.param_groups[0]["lr"]
                 print(
                     f"Epoch {epoch + 1}/{self.args.epochs}, Learning Rate: {previous_lr} -> {current_lr}"
-                    f" (lr_scheduler: {self.args.lr_scheduler})"
+                    f" (lr_scheduler: {self.args.lr_scheduler}, "
+                    f"lr_scheduler_params: {self.args.lr_scheduler_params[self.args.lr_scheduler]})"
                 )
 
         return metrics
