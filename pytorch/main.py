@@ -11,25 +11,19 @@ def get_args_from_parser() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="TimeDRL")
 
     # * basic config
-    parser.add_argument(
-        "--task_name",
-        type=str,
-        default="forecasting",
-        choices=["forecasting", "classification"],
-        help="time-series tasks",
-    )
-    parser.add_argument(
-        "--model",
-        type=str,
-        default="TimeDRL",
-        choices=["TimeDRL"],
-        help="model name",
-    )
+    # parser.add_argument(
+    #     "--task_name",
+    #     type=str,
+    #     default="forecasting",
+    #     choices=["forecasting", "classification"],
+    #     help="time-series tasks",
+    # )
     parser.add_argument(
         "--overwrite_args",
         action="store_true",
         help="overwrite args with fixed_params and tunable_params",
         default=False,
+        # ! Remeber to run `python main.py --overwrite_args` to overwrite args
     )
     parser.add_argument(
         "--checkpoint_loading_path",
