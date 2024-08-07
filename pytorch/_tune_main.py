@@ -7,7 +7,11 @@ from typing import Callable
 import pandas as pd
 
 from utils.tools import set_seed, print_formatted_dict
-from utils.ray_tune_tools import suppress_print, terminate_early_trial
+from utils.ray_tune_tools import (
+    suppress_print,
+    terminate_early_trial,
+    get_experiment_trial_folder,
+)
 from main import get_args_from_parser
 from main import trainable as trainable_without_ray_tune
 
@@ -42,7 +46,8 @@ def get_tunable_params(enable_ray_tune: bool = False) -> dict:
         "learning_rate": loguniform(1e-4, 1e-1, 0.001),
         "weight_decay": uniform(0, 0.1, 0.01),
         "epochs": choice(
-            [1, 3, 5, 10],
+            [1],
+            # [1, 3, 5, 10],
             1,
         ),
         "lr_scheduler": choice(
@@ -95,7 +100,19 @@ def trainable(
     enable_ray_tune: bool = False,
     start_trial_id: int = 0,
 ) -> dict:
-    return trainable_without_ray_tune(tunable_params, fixed_params, args)
+    # Update root_path
+    experiment_folder, trial_folder = get_experiment_trial_folder()
+    fixed_params["root_path"] = Path(
+        fixed_params["root_path"], "ray_results", experiment_folder, trial_folder
+    )
+
+    return trainable_without_ray_tune(
+        tunable_params,
+        fixed_params,
+        args,
+        # enable_plot=False,
+        enable_plot=True,
+    )
 
 
 def get_tune_main_metric_mode(fixed_params: dict) -> tuple[str, str, list, list]:
@@ -221,6 +238,7 @@ if __name__ == "__main__":
 
     # Setup fixed params
     fixed_params = {
+        "root_path": Path.cwd(),
         "batch_size": batch_size,
         "num_workers": num_workers,
         "num_trials": num_trials,

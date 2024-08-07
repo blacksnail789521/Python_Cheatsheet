@@ -4,6 +4,7 @@ from functools import wraps
 from pathlib import Path
 import re
 from typing import Callable
+from ray import train
 
 
 def suppress_print(func: Callable) -> Callable:
@@ -88,3 +89,12 @@ def terminate_early_trial(return_value: dict = {"test_acc": 0}) -> Callable:
         return wrapper
 
     return decorator
+
+
+def get_experiment_trial_folder() -> tuple[str, str]:
+
+    trial_path = Path(train.get_context().get_trial_dir())
+    trial_folder = trial_path.name
+    experiment_folder = trial_path.parent.parent.name
+
+    return experiment_folder, trial_folder

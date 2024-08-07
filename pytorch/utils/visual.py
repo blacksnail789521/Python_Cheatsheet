@@ -77,6 +77,7 @@ def visualize_metric(history: dict, mode: str = "table") -> None:
 def plot_predictions(
     model: nn.Module,
     test_loader: DataLoader,
+    root_path: Path,
     enable_show: bool = False,
 ) -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -90,7 +91,7 @@ def plot_predictions(
         plt.title(f"Label: {y[i]}, Prediction: {torch.argmax(y_pred)}")
 
         # Save the figure
-        plot_folder = Path("plots")
+        plot_folder = Path(root_path, "plots")
         plot_folder.mkdir(parents=True, exist_ok=True)
         plt.savefig(plot_folder / f"prediction_{i}.png")
         if enable_show:
