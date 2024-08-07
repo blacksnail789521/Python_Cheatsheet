@@ -106,6 +106,7 @@ def trainable(
         fixed_params["root_path"], "ray_results", experiment_folder, trial_folder
     )
 
+    # Run the main function
     return trainable_without_ray_tune(
         tunable_params,
         fixed_params,
