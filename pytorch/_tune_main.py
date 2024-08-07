@@ -100,11 +100,12 @@ def trainable(
     enable_ray_tune: bool = False,
     start_trial_id: int = 0,
 ) -> dict:
-    # Update root_path
-    experiment_folder, trial_folder = get_experiment_trial_folder()
-    fixed_params["root_path"] = Path(
-        fixed_params["root_path"], "ray_results", experiment_folder, trial_folder
-    )
+    # Update root_path when using Ray Tune
+    if enable_ray_tune:
+        experiment_folder, trial_folder = get_experiment_trial_folder()
+        fixed_params["root_path"] = Path(
+            fixed_params["root_path"], "ray_results", experiment_folder, trial_folder
+        )
 
     # Run the main function
     return trainable_without_ray_tune(
