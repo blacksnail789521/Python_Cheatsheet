@@ -80,7 +80,7 @@ class Exp_Classification(object):
             patience=self.args.patience, verbose=True, delta=self.args.delta
         )
 
-    def train(self) -> dict[str, dict[str, list[float]]]:
+    def train(self) -> dict[str, defaultdict]:
         # * Load checkpoint if it exists
         if (
             self.args.checkpoint_loading_path
@@ -137,32 +137,22 @@ class Exp_Classification(object):
                     )
 
             # * At the end of each epoch, we get all the metrics
-            train_loss, train_acc, train_f1, train_kappa = self.get_metrics(
-                self.train_loader
-            )
-            metrics["train"]["loss"].append(train_loss)
-            metrics["train"]["acc"].append(train_acc)
-            metrics["train"]["mf1"].append(train_f1)
-            metrics["train"]["kappa"].append(train_kappa)
-            val_loss, val_acc, val_f1, val_kappa = self.get_metrics(self.val_loader)
-            metrics["val"]["loss"].append(val_loss)
-            metrics["val"]["acc"].append(val_acc)
-            metrics["val"]["mf1"].append(val_f1)
-            metrics["val"]["kappa"].append(val_kappa)
-            test_loss, test_acc, test_f1, test_kappa = self.get_metrics(
-                self.test_loader
-            )
-            metrics["test"]["loss"].append(test_loss)
-            metrics["test"]["acc"].append(test_acc)
-            metrics["test"]["mf1"].append(test_f1)
-            metrics["test"]["kappa"].append(test_kappa)
+            train_metrics = self.get_metrics(self.train_loader)
+            val_metrics = self.get_metrics(self.val_loader)
+            test_metrics = self.get_metrics(self.test_loader)
+            for key in train_metrics.keys():
+                metrics["train"][key].append(train_metrics[key])
+                metrics["val"][key].append(val_metrics[key])
+                metrics["test"][key].append(test_metrics[key])
 
             # * Show metrics for all the previous epochs
             visualize_metric(metrics, mode="table")
             visualize_metric(metrics, mode="plot")
 
             # * Early stopping
-            self.early_stopping(val_loss, self.model, self.args.checkpoint_saving_path)
+            self.early_stopping(
+                val_metrics["loss"], self.model, self.args.checkpoint_saving_path
+            )
             if self.early_stopping.early_stop:
                 print("Early stopping")
                 break
@@ -170,7 +160,12 @@ class Exp_Classification(object):
             # * Learning rate scheduler
             if self.args.lr_scheduler != "none":
                 previous_lr = self.optimizer.param_groups[0]["lr"]
-                self.scheduler.step()
+                if isinstance(
+                    self.scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau
+                ):
+                    self.scheduler.step(val_metrics["loss"])
+                else:
+                    self.scheduler.step()
                 current_lr = self.optimizer.param_groups[0]["lr"]
                 print(
                     f"Epoch {epoch + 1}/{self.args.epochs}, Learning Rate: {previous_lr} -> {current_lr}"
@@ -180,7 +175,7 @@ class Exp_Classification(object):
 
         return metrics
 
-    def get_metrics(self, data_loader: DataLoader) -> tuple[float, float, float, float]:
+    def get_metrics(self, data_loader: DataLoader) -> dict[str, float]:
         total_preds = []
         total_trues = []
         total_loss = 0
@@ -220,4 +215,4 @@ class Exp_Classification(object):
         mf1 = float(f1_score(total_trues, total_preds, average="macro"))
         kappa = float(cohen_kappa_score(total_trues, total_preds))
 
-        return loss, acc, mf1, kappa
+        return {"loss": loss, "acc": acc, "mf1": mf1, "kappa": kappa}
