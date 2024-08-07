@@ -16,102 +16,71 @@ os.environ["RAY_AIR_NEW_OUTPUT"] = "0"
 
 
 def get_tunable_params(enable_ray_tune: bool = False) -> dict:
-    if enable_ray_tune == False:
-        tunable_params = {
-            "model_name": "MLP",
-            "model_params": {
-                "MLP": {
-                    "num_layers": 3,
-                    "use_bn": True,
-                },
-                "CNN": {
-                    "num_conv_layers": 3,
-                    "use_bn": True,
-                },
+
+    def choice(options, default):
+        return tune.choice(options) if enable_ray_tune else default
+
+    def loguniform(low, high, default):
+        return tune.loguniform(low, high) if enable_ray_tune else default
+
+    def uniform(low, high, default):
+        return tune.uniform(low, high) if enable_ray_tune else default
+
+    tunable_params = {
+        "model_name": choice(["MLP", "CNN"], "MLP"),
+        "model_params": {
+            "MLP": {
+                "num_layers": choice([1, 2, 3], 3),
+                "use_bn": choice([True, False], True),
             },
-            "optim": "AdamW",
-            "learning_rate": 0.001,
-            "weight_decay": 0.01,
-            "epochs": 1,
-            # "epochs": 3,
-            "lr_scheduler": "StepLR",
-            "lr_scheduler_params": {
-                "StepLR": {
-                    "step_size": 1,
-                    "gamma": 0.1,
-                },
-                "ExponentialLR": {
-                    "gamma": 0.95,
-                },
-                "ReduceLROnPlateau": {
-                    "factor": 0.1,
-                    "patience": 10,
-                },
-                "CosineAnnealingLR": {
-                    "T_max": 2,
-                },
-                "CyclicLR": {
-                    "max_lr": 0.1,
-                    "step_size_up": 3,
-                    "step_size_down": 3,
-                },
-                "OneCycleLR": {
-                    "max_lr": 0.1,
-                },
+            "CNN": {
+                "num_conv_layers": choice([1, 2, 3], 3),
+                "use_bn": choice([True, False], True),
             },
-        }
-    else:
-        tunable_params = {
-            "model_name": tune.choice(["MLP", "CNN"]),
-            "model_params": {
-                "MLP": {
-                    "num_layers": tune.choice([1, 2, 3]),
-                    "use_bn": tune.choice([True, False]),
-                },
-                "CNN": {
-                    "num_conv_layers": tune.choice([1, 2, 3]),
-                    "use_bn": tune.choice([True, False]),
-                },
+        },
+        "optim": choice(["Adam", "AdamW"], "AdamW"),
+        "learning_rate": loguniform(1e-4, 1e-1, 0.001),
+        "weight_decay": uniform(0, 0.1, 0.01),
+        "epochs": choice(
+            [1, 3, 5, 10],
+            1,
+        ),
+        "lr_scheduler": choice(
+            [
+                "StepLR",
+                "ExponentialLR",
+                "ReduceLROnPlateau",
+                "CosineAnnealingLR",
+                "CyclicLR",
+                "OneCycleLR",
+            ],
+            "StepLR",
+        ),
+        "lr_scheduler_params": {
+            "StepLR": {
+                "step_size": choice([1, 3, 5], 1),
+                "gamma": uniform(0.1, 0.9, 0.5),
             },
-            "optim": tune.choice(["Adam", "AdamW"]),
-            "learning_rate": tune.loguniform(1e-4, 1e-1),
-            "weight_decay": tune.uniform(0, 0.1),
-            "epochs": tune.choice([1, 3, 5, 10]),
-            "lr_scheduler": tune.choice(
-                [
-                    "StepLR",
-                    "ExponentialLR",
-                    "ReduceLROnPlateau",
-                    "CosineAnnealingLR",
-                    "CyclicLR",
-                    "OneCycleLR",
-                ]
-            ),
-            "lr_scheduler_params": {
-                "StepLR": {
-                    "step_size": tune.choice([1, 3, 5]),
-                    "gamma": tune.uniform(0.1, 0.9),
-                },
-                "ExponentialLR": {
-                    "gamma": tune.uniform(0.1, 0.9),
-                },
-                "ReduceLROnPlateau": {
-                    "factor": tune.uniform(0.1, 0.9),
-                    "patience": tune.choice([5, 10, 20]),
-                },
-                "CosineAnnealingLR": {
-                    "T_max": tune.choice([1, 3, 5]),
-                },
-                "CyclicLR": {
-                    "max_lr": tune.loguniform(1e-1, 1),
-                    "step_size_up": tune.choice([1, 3, 5]),
-                    "step_size_down": tune.choice([1, 3, 5]),
-                },
-                "OneCycleLR": {
-                    "max_lr": tune.loguniform(1e-1, 1),
-                },
+            "ExponentialLR": {
+                "gamma": uniform(0.1, 0.9, 0.5),
             },
-        }
+            "ReduceLROnPlateau": {
+                "factor": uniform(0.1, 0.9, 0.5),
+                "patience": choice([5, 10, 20], 10),
+            },
+            "CosineAnnealingLR": {
+                "T_max": choice([1, 3, 5], 2),
+            },
+            "CyclicLR": {
+                "max_lr": loguniform(1e-1, 1, 0.1),
+                "step_size_up": choice([1, 3, 5], 3),
+                "step_size_down": choice([1, 3, 5], 3),
+            },
+            "OneCycleLR": {
+                "max_lr": loguniform(1e-1, 1, 0.1),
+            },
+        },
+    }
 
     return tunable_params
 
@@ -185,7 +154,6 @@ def tunable(
         max_concurrent_trials=max_concurrent_trials,
         progress_reporter=reporter,
         storage_path=output_path,
-        # local_dir=output_path,
         verbose=1,
         raise_on_failed_trial=False,
     )
