@@ -6,6 +6,7 @@ from pathlib import Path
 from tqdm import tqdm
 import numpy as np
 from sklearn.metrics import accuracy_score, f1_score, cohen_kappa_score
+from collections import defaultdict
 
 from dataset_loader.load_MNIST import load_MNIST, show_data
 from models.MLP import MLP
@@ -94,9 +95,9 @@ class Exp_Classification(object):
 
         # * Train the model
         metrics = {
-            "train": {"loss": [], "acc": [], "mf1": [], "kappa": []},
-            "val": {"loss": [], "acc": [], "mf1": [], "kappa": []},
-            "test": {"loss": [], "acc": [], "mf1": [], "kappa": []},
+            "train": defaultdict(list),
+            "val": defaultdict(list),
+            "test": defaultdict(list),
         }
         for epoch in range(self.args.epochs):
             self.model.train()
