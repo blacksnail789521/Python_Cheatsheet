@@ -87,11 +87,11 @@ class Exp_Classification(object):
             and Path(self.args.checkpoint_loading_path).exists()
         ):
             print(f"Loading checkpoint from {self.args.checkpoint_loading_path} ...")
-            model_state = torch.load(Path(self.args.checkpoint_loading_path))
+            model_state = torch.load(Path(self.args.checkpoint_loading_path), weights_only=True)
             self.model.load_state_dict(model_state)
 
         # Automatic Mixed Precision (some op. are fp32, some are fp16)
-        scaler = torch.cuda.amp.GradScaler(enabled=self.args.use_amp)  # type: ignore
+        scaler = torch.amp.GradScaler("cuda", enabled=self.args.use_amp)  # type: ignore
 
         # * Train the model
         metrics = {
@@ -118,7 +118,7 @@ class Exp_Classification(object):
                 # ? 1. Zero grad
                 self.optimizer.zero_grad()
 
-                with torch.cuda.amp.autocast(enabled=self.args.use_amp):  # type: ignore
+                with torch.amp.autocast("cuda", enabled=self.args.use_amp):  # type: ignore
                     # ? 2. Call the model
                     y_pred = self.model(x)
 
@@ -192,7 +192,7 @@ class Exp_Classification(object):
                 # ? 1. Zero grad
                 pass
 
-                with torch.cuda.amp.autocast(enabled=self.args.use_amp):  # type: ignore
+                with torch.amp.autocast("cuda", enabled=self.args.use_amp):  # type: ignore
                     # ? 2. Call the model
                     y_pred = self.model(x)
 

@@ -11,6 +11,9 @@ from utils.ray_tune_tools import suppress_print, terminate_early_trial
 from main import get_args_from_parser
 from main import trainable as trainable_without_ray_tune
 
+# Use old reporting format
+os.environ["RAY_AIR_NEW_OUTPUT"] = "0"
+
 
 def get_tunable_params(enable_ray_tune: bool = False) -> dict:
     if enable_ray_tune == False:
@@ -126,7 +129,7 @@ def trainable(
     return trainable_without_ray_tune(tunable_params, fixed_params, args)
 
 
-def get_tune_main_metric_mode(fixed_params: dict) -> tuple[str, str, list]:
+def get_tune_main_metric_mode(fixed_params: dict) -> tuple[str, str, list, list]:
     # Set up metric and mode
     metric = "test_acc"
     mode = "max"
@@ -134,7 +137,10 @@ def get_tune_main_metric_mode(fixed_params: dict) -> tuple[str, str, list]:
     # Set up metric_columns
     metric_columns = ["time_total_s", "test_acc", "test_mf1", "test_kappa"]
 
-    return metric, mode, metric_columns
+    # Set up parameter_columns
+    parameter_columns = ["model_name", "learning_rate", "weight_decay", "epochs"]
+
+    return metric, mode, metric_columns, parameter_columns
 
 
 def tunable(
@@ -149,15 +155,9 @@ def tunable(
     max_concurrent_trials = len(fixed_params["gpus"].split(","))
 
     # * Set up metric, mode, and metric_columns
-    metric, mode, metric_columns = get_metric_mode(fixed_params)
+    metric, mode, metric_columns, parameter_columns = get_metric_mode(fixed_params)
 
     # * Set up reporter
-    parameter_columns = [
-        "model_name",
-        "learning_rate",
-        "weight_decay",
-        "epochs",
-    ]
     reporter = CLIReporter(
         metric_columns=metric_columns,
         parameter_columns=parameter_columns,
@@ -184,7 +184,8 @@ def tunable(
         num_samples=fixed_params["num_trials"],
         max_concurrent_trials=max_concurrent_trials,
         progress_reporter=reporter,
-        local_dir=output_path,
+        storage_path=output_path,
+        # local_dir=output_path,
         verbose=1,
         raise_on_failed_trial=False,
     )
@@ -210,13 +211,13 @@ def tunable(
             "iterations_since_restore",
             "warmup_time",
             "experiment_tag",
-        ]
+        ],
+        errors="ignore",
     )
     analysis_df = analysis_df.sort_values(
         by=[metric], ascending=(True if mode == "min" else False)
     )
-    experiment_name = Path(str(analysis.get_best_logdir())).parts[-2]
-    analysis_df.to_csv(Path(output_path, experiment_name, "analysis.csv"), index=False)
+    analysis_df.to_csv(Path(analysis.experiment_path, "analysis.csv"), index=False)
 
     return analysis, analysis_df
 
