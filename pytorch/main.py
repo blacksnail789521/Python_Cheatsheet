@@ -229,6 +229,9 @@ if __name__ == "__main__":
     model_name = "MLP"
     # model_name = "CNN"
 
+    hidden_dim = 128  # for MLP
+    num_hidden_layers = 2  # for MLP
+
     batch_size = 256
 
     num_workers = 4
@@ -251,7 +254,9 @@ if __name__ == "__main__":
         "model_name": model_name,
         "model_params": {
             "MLP": {
-                "num_layers": 3,
+                "hidden_dim": hidden_dim,
+                "num_hidden_layers": num_hidden_layers,
+                "hidden_dim_sizes": [hidden_dim] * num_hidden_layers,
                 "use_bn": True,
             },
             "CNN": {
