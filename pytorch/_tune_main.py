@@ -32,6 +32,14 @@ def get_tunable_params(enable_ray_tune: bool = False) -> dict:
 
     hidden_dim = choice([64, 128, 256], 128)
     num_hidden_layers = choice([0, 1, 2], 2)
+    hidden_dim_sizes = (
+        tune.sample_from(
+            lambda spec: [spec["model_params"]["MLP"]["hidden_dim"]]
+            * spec["model_params"]["MLP"]["num_hidden_layers"]
+        )
+        if enable_ray_tune
+        else [hidden_dim] * num_hidden_layers
+    )
 
     tunable_params = {
         "model_name": choice(
@@ -45,14 +53,7 @@ def get_tunable_params(enable_ray_tune: bool = False) -> dict:
             "MLP": {
                 "hidden_dim": hidden_dim,
                 "num_hidden_layers": num_hidden_layers,
-                "hidden_dim_sizes": (
-                    tune.sample_from(
-                        lambda spec: [spec["model_params"]["MLP"]["hidden_dim"]]
-                        * spec["model_params"]["MLP"]["num_hidden_layers"]
-                    )
-                    if enable_ray_tune
-                    else [hidden_dim] * num_hidden_layers
-                ),
+                "hidden_dim_sizes": hidden_dim_sizes,
                 "use_bn": choice([True, False], True),
             },
             "CNN": {
