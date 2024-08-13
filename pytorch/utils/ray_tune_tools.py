@@ -6,7 +6,7 @@ import re
 from typing import Callable, Any
 from ray import train, tune
 import numpy as np
-import threading
+import multiprocessing
 
 
 def suppress_print(func: Callable) -> Callable:
@@ -99,36 +99,42 @@ def terminate_early_trial(default_return_metrics: dict = {"test_acc": 0}) -> Cal
 
 
 def timeout_decorator(
-    max_runtime_s: int | None = None, default_return_metrics: dict = {"test_acc": 0}
+    max_runtime_s: int | None = None, default_return_metrics: dict = {"f2": 0}
 ):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            # Extract the max_runtime_s and default_return_metrics from fixed_params
+            # Extract the max_runtime_s from kwargs, if it exists; otherwise, use the default
             fixed_params = kwargs.get("fixed_params", {})
             timeout_seconds = fixed_params.get("max_runtime_s", max_runtime_s)
-            return_metrics = fixed_params.get(
+            return_metric = fixed_params.get(
                 "default_return_metrics", default_return_metrics
             )
 
             if timeout_seconds is None:
-                # No timeout, just run the function normally
+                # No timeout specified, execute the function normally
                 return func(*args, **kwargs)
-            else:
 
-                def target():
-                    result[0] = func(*args, **kwargs)
+            result = [return_metric]  # Store the result in a mutable container
 
-                thread = threading.Thread(target=target)
-                thread.start()
-                thread.join(timeout=timeout_seconds)
+            def target(result_container):
+                result_container[0] = func(*args, **kwargs)
 
-                if thread.is_alive():
-                    # If the thread is still alive after the timeout, it means the function timed out
-                    thread.join()  # Ensure the thread is cleaned up properly
-                    return return_metrics
+            # Create a multiprocessing array to store the result
+            manager = multiprocessing.Manager()
+            result_container = manager.list([return_metric])
 
-                return result[0]
+            process = multiprocessing.Process(target=target, args=(result_container,))
+            process.start()
+            process.join(timeout=timeout_seconds)
+
+            if process.is_alive():
+                # If the process is still alive after the timeout, it means the function timed out
+                process.terminate()  # Forcefully terminate the process
+                process.join()  # Ensure the process is cleaned up properly
+                return return_metric
+
+            return result_container[0]
 
         return wrapper
 

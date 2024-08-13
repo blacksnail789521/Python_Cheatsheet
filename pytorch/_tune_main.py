@@ -65,6 +65,7 @@ def get_tunable_params(enable_ray_tune: bool = False) -> dict:
         "weight_decay": uniform(0, 0.1, 0.01),
         "epochs": choice(
             [1],
+            # [10],
             # [1, 3, 5, 10],
             1,
         ),
@@ -246,8 +247,9 @@ if __name__ == "__main__":
     start_trial_id = 0
     # start_trial_id = 50
 
-    max_runtime_s = None
-    # max_runtime_s = 25
+    # max_runtime_s = None
+    # max_runtime_s = 10
+    max_runtime_s = 27
 
     default_return_metrics = {"test_acc": 0}
 
