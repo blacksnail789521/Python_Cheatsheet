@@ -33,6 +33,7 @@ class Exp_Classification(object):
     def _get_data(self):
         # Load data
         self.train_loader, self.test_loader = load_MNIST(
+            input_root_path=self.args.input_root_path,
             batch_size=self.args.batch_size,
             num_workers=self.args.num_workers,
         )

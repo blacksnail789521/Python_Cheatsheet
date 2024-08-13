@@ -64,8 +64,8 @@ def get_tunable_params(enable_ray_tune: bool = False) -> dict:
         "learning_rate": loguniform(1e-4, 1e-1, 0.001),
         "weight_decay": uniform(0, 0.1, 0.01),
         "epochs": choice(
-            [1],
-            # [10],
+            # [1],
+            [1, 3],
             # [1, 3, 5, 10],
             1,
         ),
@@ -119,11 +119,11 @@ def trainable(
     enable_ray_tune: bool = False,
     start_trial_id: int = 0,
 ) -> dict:
-    # Update root_path when using Ray Tune
+    # Update output_root_path when using Ray Tune
     if enable_ray_tune:
         experiment_folder, trial_folder = get_experiment_trial_folder()
-        fixed_params["root_path"] = Path(
-            fixed_params["root_path"], "ray_results", experiment_folder, trial_folder
+        fixed_params["output_root_path"] = Path(
+            fixed_params["output_root_path"], "ray_results", experiment_folder, trial_folder
         )
 
     # Run the main function
@@ -248,8 +248,7 @@ if __name__ == "__main__":
     # start_trial_id = 50
 
     # max_runtime_s = None
-    # max_runtime_s = 10
-    max_runtime_s = 27
+    max_runtime_s = 10
 
     default_return_metrics = {"test_acc": 0}
 
@@ -265,7 +264,8 @@ if __name__ == "__main__":
 
     # Setup fixed params
     fixed_params = {
-        "root_path": Path.cwd(),
+        "input_root_path": Path.cwd(),
+        "output_root_path": Path.cwd(),
         "batch_size": batch_size,
         "num_workers": num_workers,
         "num_trials": num_trials,

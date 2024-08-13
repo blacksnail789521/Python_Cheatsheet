@@ -218,7 +218,7 @@ def trainable(
         print("---------------------------------------")
         print("Plotting predictions ...")
         plot_predictions(
-            exp.model, exp.test_loader, fixed_params["root_path"], enable_show=True
+            exp.model, exp.test_loader, fixed_params["output_root_path"], enable_show=True
         )
 
     return select_best_metrics(metrics, target_mode="test", target_metric="acc")
@@ -244,7 +244,8 @@ if __name__ == "__main__":
 
     # Setup fixed params
     fixed_params = {
-        "root_path": Path.cwd(),
+        "input_root_path": Path.cwd(),
+        "output_root_path": Path.cwd(),
         "batch_size": batch_size,
         "num_workers": num_workers,
     }

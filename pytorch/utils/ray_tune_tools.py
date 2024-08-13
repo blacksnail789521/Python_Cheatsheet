@@ -99,7 +99,7 @@ def terminate_early_trial(default_return_metrics: dict = {"test_acc": 0}) -> Cal
 
 
 def timeout_decorator(
-    max_runtime_s: int | None = None, default_return_metrics: dict = {"f2": 0}
+    max_runtime_s: int | None = None, default_return_metrics: dict = {"test_acc": 0}
 ):
     def decorator(func):
         @wraps(func)
@@ -115,16 +115,16 @@ def timeout_decorator(
                 # No timeout specified, execute the function normally
                 return func(*args, **kwargs)
 
-            result = [return_metric]  # Store the result in a mutable container
+            result = multiprocessing.Manager().list([return_metric])
+            exception = multiprocessing.Queue()  # Use a queue to pass exceptions
 
-            def target(result_container):
-                result_container[0] = func(*args, **kwargs)
+            def target(result_container, exception_queue):
+                try:
+                    result_container[0] = func(*args, **kwargs)
+                except Exception as e:
+                    exception_queue.put(e)
 
-            # Create a multiprocessing array to store the result
-            manager = multiprocessing.Manager()
-            result_container = manager.list([return_metric])
-
-            process = multiprocessing.Process(target=target, args=(result_container,))
+            process = multiprocessing.Process(target=target, args=(result, exception))
             process.start()
             process.join(timeout=timeout_seconds)
 
@@ -134,7 +134,11 @@ def timeout_decorator(
                 process.join()  # Ensure the process is cleaned up properly
                 return return_metric
 
-            return result_container[0]
+            # If there was an exception in the process, raise it here
+            if not exception.empty():
+                raise exception.get()
+
+            return result[0]
 
         return wrapper
 

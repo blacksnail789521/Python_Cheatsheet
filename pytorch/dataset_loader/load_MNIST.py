@@ -44,6 +44,7 @@ class MNIST_Dataset(Dataset):
 
 
 def load_MNIST(
+    input_root_path: Path = Path.cwd(),
     normalize: bool = True,
     one_hot: bool = False,
     batch_size: int = 256,
@@ -66,18 +67,19 @@ def load_MNIST(
         test_ds = MNIST_Dataset(x_test, y_test, normalize, one_hot)
     else:
         # Get ds
+        # raise Exception(input_root_path)
         train_ds = MNIST(
-            root=str(Path.cwd() / "dataset"),
+            root=str(input_root_path / "dataset"),
             train=True,
-            download=True,
+            download=False,
             transform=transforms.ToTensor(),
             # Converts a PIL Image or numpy.ndarray (H x W x C) in the range [0, 255] to
             # a torch.FloatTensor of shape (C x H x W) in the range [0.0, 1.0]
         )
         test_ds = MNIST(
-            root=str(Path.cwd() / "dataset"),
+            root=str(input_root_path / "dataset"),
             train=False,
-            download=True,
+            download=False,
             transform=transforms.ToTensor(),
         )
 
@@ -115,8 +117,11 @@ def show_data(dataloader: DataLoader) -> None:
 
 
 if __name__ == "__main__":
+    input_root_path = Path.cwd().parent
     # Load data
-    train_loader, test_loader = load_MNIST(batch_size=256, use_numpy=False)
+    train_loader, test_loader = load_MNIST(
+        input_root_path=input_root_path, batch_size=256, use_numpy=False
+    )
     # train_loader, test_loader = load_MNIST(batch_size=256, use_numpy=True)
 
     # Show the data
