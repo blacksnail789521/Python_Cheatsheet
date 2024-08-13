@@ -99,7 +99,7 @@ def terminate_early_trial(default_return_metrics: dict = {"test_acc": 0}) -> Cal
 
 
 def timeout_decorator(
-    max_runtime_s: int = 1000, default_return_metrics: dict = {"test_acc": 0}
+    max_runtime_s: int | None = None, default_return_metrics: dict = {"test_acc": 0}
 ):
     def decorator(func):
         @wraps(func)
@@ -111,21 +111,24 @@ def timeout_decorator(
                 "default_return_metrics", default_return_metrics
             )
 
-            result = [return_metrics]  # Store the result in a mutable container
+            if timeout_seconds is None:
+                # No timeout, just run the function normally
+                return func(*args, **kwargs)
+            else:
 
-            def target():
-                result[0] = func(*args, **kwargs)
+                def target():
+                    result[0] = func(*args, **kwargs)
 
-            thread = threading.Thread(target=target)
-            thread.start()
-            thread.join(timeout=timeout_seconds)
+                thread = threading.Thread(target=target)
+                thread.start()
+                thread.join(timeout=timeout_seconds)
 
-            if thread.is_alive():
-                # If the thread is still alive after the timeout, it means the function timed out
-                thread.join()  # Ensure the thread is cleaned up properly
-                return return_metrics
+                if thread.is_alive():
+                    # If the thread is still alive after the timeout, it means the function timed out
+                    thread.join()  # Ensure the thread is cleaned up properly
+                    return return_metrics
 
-            return result[0]
+                return result[0]
 
         return wrapper
 

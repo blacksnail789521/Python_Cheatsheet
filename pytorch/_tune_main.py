@@ -243,11 +243,11 @@ if __name__ == "__main__":
     # gpus = "0"
     gpus = "0,1,2,3"
 
-    start_trial_id = 2
+    start_trial_id = 0
     # start_trial_id = 50
 
-    max_runtime_s = 25
-    # max_runtime_s = 60
+    max_runtime_s = None
+    # max_runtime_s = 25
 
     default_return_metrics = {"test_acc": 0}
 
