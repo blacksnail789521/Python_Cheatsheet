@@ -10,7 +10,9 @@ from utils.tools import set_seed, print_formatted_dict
 from utils.ray_tune_tools import (
     suppress_print,
     terminate_early_trial,
+    timeout_decorator,
     get_experiment_trial_folder,
+    create_tune_function,
 )
 from main import get_args_from_parser
 from main import trainable as trainable_without_ray_tune
@@ -21,21 +23,18 @@ os.environ["RAY_AIR_NEW_OUTPUT"] = "0"
 
 def get_tunable_params(enable_ray_tune: bool = False) -> dict:
 
-    def choice(options, default):
-        return tune.choice(options) if enable_ray_tune else default
+    choice, loguniform, uniform = create_tune_function(enable_ray_tune)
 
-    def loguniform(low, high, default):
-        return tune.loguniform(low, high) if enable_ray_tune else default
-
-    def uniform(low, high, default):
-        return tune.uniform(low, high) if enable_ray_tune else default
-
-    hidden_dim = choice([64, 128, 256], 128)
-    num_hidden_layers = choice([0, 1, 2], 2)
+    hidden_dim = choice([64, 128, 256], 128, sample_once=True)
+    num_hidden_layers = choice([0, 1, 2], 2, sample_once=True)
     hidden_dim_sizes = (
         tune.sample_from(
-            lambda spec: [spec["model_params"]["MLP"]["hidden_dim"]]
-            * spec["model_params"]["MLP"]["num_hidden_layers"]
+            lambda spec: (
+                [spec["model_params"][spec["model_name"]]["hidden_dim"]]
+                * spec["model_params"][spec["model_name"]]["num_hidden_layers"]
+                if spec["model_name"] in ["MLP"]
+                else None
+            )
         )
         if enable_ray_tune
         else [hidden_dim] * num_hidden_layers
@@ -111,7 +110,7 @@ def get_tunable_params(enable_ray_tune: bool = False) -> dict:
 
 @suppress_print
 @terminate_early_trial()
-# @terminate_early_trial({"test_acc": -1})
+@timeout_decorator()
 def trainable(
     tunable_params: dict,  # Place tunable parameters first for Ray Tune
     fixed_params: dict,
@@ -244,8 +243,13 @@ if __name__ == "__main__":
     # gpus = "0"
     gpus = "0,1,2,3"
 
-    start_trial_id = 0
+    start_trial_id = 2
     # start_trial_id = 50
+
+    max_runtime_s = 25
+    # max_runtime_s = 60
+
+    default_return_metrics = {"test_acc": 0}
 
     use_self_defined_params = False
     # use_self_defined_params = True  # use this to debug
@@ -265,6 +269,8 @@ if __name__ == "__main__":
         "num_trials": num_trials,
         "gpus": gpus,
         "start_trial_id": start_trial_id,
+        "max_runtime_s": max_runtime_s,
+        "default_return_metrics": default_return_metrics,
     }
 
     # Setup tunable params
