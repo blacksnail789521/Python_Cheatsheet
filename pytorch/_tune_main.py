@@ -5,6 +5,7 @@ from ray.tune import CLIReporter
 import argparse
 from typing import Callable
 import pandas as pd
+import re
 
 from utils.tools import set_seed, print_formatted_dict
 from utils.ray_tune_tools import (
@@ -24,87 +25,103 @@ os.environ["RAY_AIR_NEW_OUTPUT"] = "0"
 def get_tunable_params(enable_ray_tune: bool = False) -> dict:
 
     choice, loguniform, uniform, resolve_key = create_tune_function(enable_ray_tune)
+    tunable_params = {}
 
-    hidden_dim = choice([64, 128, 256], 128, sample_once_key="hidden_dim")
-    num_hidden_layers = choice([0, 1, 2], 2, sample_once_key="num_hidden_layers")
-    hidden_dim_sizes = (
+    # hidden_dim = choice([64, 128, 256], 128, sample_once_key="hidden_dim")
+    tunable_params["hidden_dim"] = choice(
+        [64, 128, 256], 128, sample_once_key="hidden_dim"
+    )
+    tunable_params["num_hidden_layers"] = choice(
+        [0, 1, 2], 2, sample_once_key="num_hidden_layers"
+    )
+    tunable_params["hidden_dim_sizes"] = (
         tune.sample_from(
-            lambda config: (
+            lambda config: config.setdefault(
+                resolve_key("hidden_dim_sizes"),
                 [config[resolve_key("hidden_dim")]]
-                * config[resolve_key("num_hidden_layers")]
+                * config[resolve_key("num_hidden_layers")],
             )
         )
         if enable_ray_tune
-        else [hidden_dim] * num_hidden_layers
+        else [tunable_params["hidden_dim"]] * tunable_params["num_hidden_layers"]
     )
 
-    tunable_params = {
-        "model_name": choice(
-            [
+    tunable_params["hidden_dim_sizes_2"] = (
+        tune.sample_from(lambda config: config[resolve_key("hidden_dim_sizes")])
+        if enable_ray_tune
+        else tunable_params["hidden_dim_sizes"]
+    )
+
+    tunable_params.update(
+        {
+            "model_name": choice(
+                [
+                    "MLP",
+                    "CNN",
+                ],
                 "MLP",
-                "CNN",
-            ],
-            "MLP",
-            sample_once_key="model_name",  # No need to worry!
-        ),
-        "model_params": {
-            "MLP": {
-                "hidden_dim": hidden_dim,
-                "num_hidden_layers": num_hidden_layers,
-                "hidden_dim_sizes": hidden_dim_sizes,
-                "use_bn": choice([True, False], True),
+                sample_once_key="model_name",  # No need to worry!
+            ),
+            "model_params": {
+                "MLP": {
+                    "hidden_dim_sizes": tunable_params["hidden_dim_sizes"],
+                    "hidden_dim_sizes_2": tunable_params[
+                        "hidden_dim_sizes_2"
+                    ],  # just check if we set hidden_dim_sizes correctly
+                    "use_bn": choice([True, False], True),
+                },
+                "CNN": {
+                    "num_conv_layers": choice([1, 2, 3], 3),
+                    "use_bn": choice([True, False], True),
+                },
             },
-            "CNN": {
-                "num_conv_layers": choice([1, 2, 3], 3),
-                "use_bn": choice([True, False], True),
-            },
-        },
-        "optim": choice(["Adam", "AdamW"], "AdamW"),
-        "learning_rate": loguniform(1e-4, 1e-1, 0.001),
-        "weight_decay": uniform(0, 0.1, 0.01),
-        "epochs": choice(
-            # [1],
-            [1, 3],
-            # [1, 3, 5, 10],
-            1,
-            sample_once_key="epochs",  # No need to worry!
-        ),
-        "lr_scheduler": choice(
-            [
+            "optim": choice(["Adam", "AdamW"], "AdamW"),
+            "learning_rate": loguniform(1e-4, 1e-1, 0.001),
+            "weight_decay": uniform(0, 0.1, 0.01),
+            "epochs": choice(
+                # [1],
+                [1, 3],
+                # [1, 3, 5, 10],
+                1,
+                sample_once_key="epochs",  # No need to worry!
+            ),
+            "lr_scheduler": choice(
+                [
+                    "StepLR",
+                    "ExponentialLR",
+                    "ReduceLROnPlateau",
+                    "CosineAnnealingLR",
+                    "CyclicLR",
+                    "OneCycleLR",
+                ],
                 "StepLR",
-                "ExponentialLR",
-                "ReduceLROnPlateau",
-                "CosineAnnealingLR",
-                "CyclicLR",
-                "OneCycleLR",
-            ],
-            "StepLR",
-        ),
-        "lr_scheduler_params": {
-            "StepLR": {
-                "step_size": choice([1, 3, 5], 1),
-                "gamma": uniform(0.1, 0.9, 0.5),
+            ),
+            "lr_scheduler_params": {
+                "StepLR": {
+                    "step_size": choice([1, 3, 5], 1),
+                    "gamma": uniform(0.1, 0.9, 0.5),
+                },
+                "ExponentialLR": {
+                    "gamma": uniform(0.1, 0.9, 0.5),
+                },
+                "ReduceLROnPlateau": {
+                    "factor": uniform(0.1, 0.9, 0.5),
+                    "patience": choice([5, 10, 20], 10),
+                },
+                "CosineAnnealingLR": {
+                    "T_max": choice([1, 3, 5], 2),
+                },
+                "CyclicLR": {
+                    "max_lr": loguniform(1e-1, 1, 0.1),
+                    "step_size_up": choice([1, 3, 5], 3),
+                    "step_size_down": choice([1, 3, 5], 3),
+                },
+                "OneCycleLR": {
+                    "max_lr": loguniform(1e-1, 1, 0.1),
+                },
             },
-            "ExponentialLR": {
-                "gamma": uniform(0.1, 0.9, 0.5),
-            },
-            "ReduceLROnPlateau": {
-                "factor": uniform(0.1, 0.9, 0.5),
-                "patience": choice([5, 10, 20], 10),
-            },
-            "CosineAnnealingLR": {
-                "T_max": choice([1, 3, 5], 2),
-            },
-            "CyclicLR": {
-                "max_lr": loguniform(1e-1, 1, 0.1),
-                "step_size_up": choice([1, 3, 5], 3),
-                "step_size_down": choice([1, 3, 5], 3),
-            },
-            "OneCycleLR": {
-                "max_lr": loguniform(1e-1, 1, 0.1),
-            },
-        },
-    }
+        }
+    )
 
     return tunable_params
 
@@ -202,27 +219,28 @@ def tunable(
     # * Save analysis report as csv
     analysis_df = analysis.results_df
     analysis_df = analysis_df.reset_index()  # reset index to get trial_id
-    analysis_df = analysis_df.drop(
-        columns=[
-            "experiment_id",
-            "hostname",
-            "node_ip",
-            "time_this_iter_s",
-            "time_since_restore",
-            "timesteps_since_restore",
-            "training_iteration",
-            "timesteps_total",
-            "date",
-            "timestamp",
-            "pid",
-            "done",
-            "episodes_total",
-            "iterations_since_restore",
-            "warmup_time",
-            "experiment_tag",
-        ],
-        errors="ignore",
+    columns_to_drop = [
+        "experiment_id",
+        "hostname",
+        "node_ip",
+        "time_this_iter_s",
+        "time_since_restore",
+        "timesteps_since_restore",
+        "training_iteration",
+        "timesteps_total",
+        "date",
+        "timestamp",
+        "pid",
+        "done",
+        "episodes_total",
+        "iterations_since_restore",
+        "warmup_time",
+        "experiment_tag",
+    ]
+    columns_to_drop.extend(
+        [col for col in analysis_df.columns if re.match(r"^config\/_", col)]
     )
+    analysis_df = analysis_df.drop(columns=columns_to_drop, errors="ignore")
     analysis_df = analysis_df.sort_values(
         by=[metric], ascending=(True if mode == "min" else False)
     )
