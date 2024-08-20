@@ -67,7 +67,6 @@ def load_MNIST(
         test_ds = MNIST_Dataset(x_test, y_test, normalize, one_hot)
     else:
         # Get ds
-        # raise Exception(input_root_path)
         train_ds = MNIST(
             root=str(input_root_path / "dataset"),
             train=True,

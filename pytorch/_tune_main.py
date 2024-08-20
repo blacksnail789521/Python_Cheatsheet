@@ -23,17 +23,15 @@ os.environ["RAY_AIR_NEW_OUTPUT"] = "0"
 
 def get_tunable_params(enable_ray_tune: bool = False) -> dict:
 
-    choice, loguniform, uniform = create_tune_function(enable_ray_tune)
+    choice, loguniform, uniform, resolve_key = create_tune_function(enable_ray_tune)
 
-    hidden_dim = choice([64, 128, 256], 128, sample_once=True)
-    num_hidden_layers = choice([0, 1, 2], 2, sample_once=True)
+    hidden_dim = choice([64, 128, 256], 128, sample_once_key="hidden_dim")
+    num_hidden_layers = choice([0, 1, 2], 2, sample_once_key="num_hidden_layers")
     hidden_dim_sizes = (
         tune.sample_from(
-            lambda spec: (
-                [spec["model_params"][spec["model_name"]]["hidden_dim"]]
-                * spec["model_params"][spec["model_name"]]["num_hidden_layers"]
-                if spec["model_name"] in ["MLP"]
-                else None
+            lambda config: (
+                [config[resolve_key("hidden_dim")]]
+                * config[resolve_key("num_hidden_layers")]
             )
         )
         if enable_ray_tune
@@ -47,6 +45,7 @@ def get_tunable_params(enable_ray_tune: bool = False) -> dict:
                 "CNN",
             ],
             "MLP",
+            sample_once_key="model_name",  # No need to worry!
         ),
         "model_params": {
             "MLP": {
@@ -68,6 +67,7 @@ def get_tunable_params(enable_ray_tune: bool = False) -> dict:
             [1, 3],
             # [1, 3, 5, 10],
             1,
+            sample_once_key="epochs",  # No need to worry!
         ),
         "lr_scheduler": choice(
             [
@@ -123,7 +123,10 @@ def trainable(
     if enable_ray_tune:
         experiment_folder, trial_folder = get_experiment_trial_folder()
         fixed_params["output_root_path"] = Path(
-            fixed_params["output_root_path"], "ray_results", experiment_folder, trial_folder
+            fixed_params["output_root_path"],
+            "ray_results",
+            experiment_folder,
+            trial_folder,
         )
 
     # Run the main function

@@ -160,45 +160,75 @@ def convert_np_to_native(value: Any) -> Any:
     return value  # Return unchanged if it's not a NumPy type
 
 
-def create_tune_function(enable_ray_tune: bool):
-    def choice(options: list[Any], default: Any, sample_once: bool = False) -> Any:
+def create_tune_function(
+    enable_ray_tune: bool,
+) -> tuple[Callable, Callable, Callable, Callable]:
+    def choice(
+        options: list[Any], default: Any, sample_once_key: str | None = None
+    ) -> Any:
         if enable_ray_tune:
-            if sample_once:
-                sampled_value = np.random.choice(options)
-                return tune.sample_from(
-                    lambda spec: convert_np_to_native(sampled_value)
-                )
+            if sample_once_key is not None:
+                # Fix '__fn_ph' issue by modifying the key
+                sample_once_key = f"_{sample_once_key}"
+
+                def consistent_sample(config):
+                    # Access the config dictionary directly using the internal key
+                    if sample_once_key not in config:
+                        sampled_value = np.random.choice(options)
+                        config[sample_once_key] = convert_np_to_native(sampled_value)
+                    return config[sample_once_key]
+
+                return tune.sample_from(consistent_sample)
             else:
                 return tune.choice(options)
         else:
             return default
 
     def loguniform(
-        low: float, high: float, default: float, sample_once: bool = False
+        low: float, high: float, default: float, sample_once_key: str | None = None
     ) -> Any:
         if enable_ray_tune:
-            if sample_once:
-                sampled_value = np.exp(np.random.uniform(np.log(low), np.log(high)))
-                return tune.sample_from(
-                    lambda spec: convert_np_to_native(sampled_value)
-                )
+            if sample_once_key is not None:
+                # Fix '__fn_ph' issue by modifying the key
+                sample_once_key = f"_{sample_once_key}"
+
+                def consistent_sample(config):
+                    if sample_once_key not in config:
+                        sampled_value = np.exp(
+                            np.random.uniform(np.log(low), np.log(high))
+                        )
+                        config[sample_once_key] = convert_np_to_native(sampled_value)
+                    return config[sample_once_key]
+
+                return tune.sample_from(consistent_sample)
             else:
                 return tune.loguniform(low, high)
         else:
             return default
 
     def uniform(
-        low: float, high: float, default: float, sample_once: bool = False
+        low: float, high: float, default: float, sample_once_key: str | None = None
     ) -> Any:
         if enable_ray_tune:
-            if sample_once:
-                sampled_value = np.random.uniform(low, high)
-                return tune.sample_from(
-                    lambda spec: convert_np_to_native(sampled_value)
-                )
+            if sample_once_key is not None:
+                # Fix '__fn_ph' issue by modifying the key
+                sample_once_key = f"_{sample_once_key}"
+
+                def consistent_sample(config):
+                    if sample_once_key not in config:
+                        sampled_value = np.random.uniform(low, high)
+                        config[sample_once_key] = convert_np_to_native(sampled_value)
+                    return config[sample_once_key]
+
+                return tune.sample_from(consistent_sample)
             else:
                 return tune.uniform(low, high)
         else:
             return default
 
-    return choice, loguniform, uniform
+    def resolve_key(key: str) -> str:
+        """Helper function to resolve the internal key used in the config."""
+        # Fix '__fn_ph' issue by modifying the key
+        return f"_{key}" if enable_ray_tune else key
+
+    return choice, loguniform, uniform, resolve_key
