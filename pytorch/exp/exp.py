@@ -46,7 +46,7 @@ class Exp_Classification(object):
         if ModelClass is None:
             raise ValueError(f"Unknown model name: {self.args.model_name}")
 
-        self.model = ModelClass(**self.args.model_params[self.args.model_name]).to(
+        self.model = ModelClass(**self.args.model_kwargs[self.args.model_name]).to(
             self.device
         )
 

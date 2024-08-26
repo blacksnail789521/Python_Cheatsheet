@@ -37,7 +37,7 @@ def suppress_print(func: Callable) -> Callable:
     return wrapper
 
 
-def extract_model_params_into_metrics(func: Callable) -> Callable:
+def extract_model_kwargs_into_metrics(func: Callable) -> Callable:
     @wraps(func)
     def wrapper(*args, **kwargs):
         return_metrics = func(*args, **kwargs)
@@ -51,11 +51,11 @@ def extract_model_params_into_metrics(func: Callable) -> Callable:
             return val
 
         model_name = tunable_params["model_name"]
-        params = tunable_params["model_params"].get(model_name, {})
+        params = tunable_params["model_kwargs"].get(model_name, {})
         formatted_params_list = [f"{k}: {format_value(v)}" for k, v in params.items()]
         formatted_params_str = "\n".join(formatted_params_list)
-        chosen_model_params = {"selected_model_params": formatted_params_str}
-        return_metrics.update(chosen_model_params)
+        chosen_model_kwargs = {"selected_model_kwargs": formatted_params_str}
+        return_metrics.update(chosen_model_kwargs)
 
         return return_metrics
 
@@ -187,17 +187,15 @@ class PythonEncoder(json.JSONEncoder):
 
 
 def store_custom_tunable_params(tunable_params: dict, output_root_path: Path):
-    # Store custom_tunable_params with corresponding kwargs
+    # Store custom_tunable_params with corresponding model kwargs
     model_name = tunable_params.get("model_name")
-    model_kwargs = tunable_params.get("model_params", {}).get(model_name, {})
+    model_kwargs = tunable_params.get("model_kwargs", {}).get(model_name, {})
     custom_tunable_params = {
         key: value
         for key, value in tunable_params.items()
-        if key != "model_params"  # Exclude the full model_params from the copy
+        if key != "model_kwargs"  # Exclude the full model_kwargs from the copy
     }
-    custom_tunable_params["model_params"] = {
-        model_name: model_kwargs
-    }
+    custom_tunable_params["model_kwargs"] = {model_name: model_kwargs}
 
     # Save custom_tunable_params to a JSON file with Python-compatible values
     with open(Path(output_root_path, "custom_tunable_params.json"), "w") as f:

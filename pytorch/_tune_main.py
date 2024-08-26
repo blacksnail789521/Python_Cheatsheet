@@ -50,7 +50,7 @@ def get_tunable_params(enable_ray_tune: bool = False) -> dict:
                 "MLP",
                 # sample_once_key="model_name",  # No need to worry!
             ),
-            "model_params": {
+            "model_kwargs": {
                 "MLP": {
                     # "num_hidden_layers": tunable_params["num_layers"],
                     "hidden_dim_sizes": tunable_params["hidden_dim_sizes"],

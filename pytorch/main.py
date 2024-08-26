@@ -218,7 +218,10 @@ def trainable(
         print("---------------------------------------")
         print("Plotting predictions ...")
         plot_predictions(
-            exp.model, exp.test_loader, fixed_params["output_root_path"], enable_show=True
+            exp.model,
+            exp.test_loader,
+            fixed_params["output_root_path"],
+            enable_show=True,
         )
 
     return select_best_metrics(metrics, target_mode="test", target_metric="acc")
@@ -253,7 +256,7 @@ if __name__ == "__main__":
     # Setup tunable params
     tunable_params = {
         "model_name": model_name,
-        "model_params": {
+        "model_kwargs": {
             "MLP": {
                 "hidden_dim": hidden_dim,
                 "num_hidden_layers": num_hidden_layers,
