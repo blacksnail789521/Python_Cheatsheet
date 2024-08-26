@@ -227,7 +227,7 @@ def create_tune_function(
             return default
     
     def tune_func(
-        func: Callable[[dict], Any], default: Any, sample_once_key: str | None = None
+        func: Callable, default: Any, sample_once_key: str | None = None
     ) -> Any:
         if enable_ray_tune:
             if sample_once_key is not None:
