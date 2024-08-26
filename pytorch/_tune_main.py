@@ -65,8 +65,8 @@ def get_tunable_params(enable_ray_tune: bool = False) -> dict:
                 },
             },
             "optim": choice(["Adam", "AdamW"], "AdamW"),
-            "learning_rate": loguniform(1e-4, 1e-1, 0.001),
-            "weight_decay": uniform(0, 0.1, 0.01),
+            "learning_rate": loguniform((1e-4, 1e-1), 0.001),
+            "weight_decay": uniform((0, 0.1), 0.01),
             "epochs": choice(
                 # [1],
                 [1, 3],
@@ -88,25 +88,25 @@ def get_tunable_params(enable_ray_tune: bool = False) -> dict:
             "lr_scheduler_params": {
                 "StepLR": {
                     "step_size": choice([1, 3, 5], 1),
-                    "gamma": uniform(0.1, 0.9, 0.5),
+                    "gamma": uniform((0.1, 0.9), 0.5),
                 },
                 "ExponentialLR": {
-                    "gamma": uniform(0.1, 0.9, 0.5),
+                    "gamma": uniform((0.1, 0.9), 0.5),
                 },
                 "ReduceLROnPlateau": {
-                    "factor": uniform(0.1, 0.9, 0.5),
+                    "factor": uniform((0.1, 0.9), 0.5),
                     "patience": choice([5, 10, 20], 10),
                 },
                 "CosineAnnealingLR": {
                     "T_max": choice([1, 3, 5], 2),
                 },
                 "CyclicLR": {
-                    "max_lr": loguniform(1e-1, 1, 0.1),
+                    "max_lr": loguniform((1e-1, 1), 0.1),
                     "step_size_up": choice([1, 3, 5], 3),
                     "step_size_down": choice([1, 3, 5], 3),
                 },
                 "OneCycleLR": {
-                    "max_lr": loguniform(1e-1, 1, 0.1),
+                    "max_lr": loguniform((1e-1, 1), 0.1),
                 },
             },
         }

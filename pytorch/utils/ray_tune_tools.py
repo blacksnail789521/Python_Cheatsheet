@@ -161,10 +161,12 @@ def create_tune_function(
     def choice(options: list[Any], default: Any) -> Any:
         return default if not enable_ray_tune else tune.choice(options)
 
-    def loguniform(low: float, high: float, default: float) -> Any:
+    def loguniform(bounds: tuple[float, float], default: float) -> Any:
+        low, high = bounds
         return default if not enable_ray_tune else tune.loguniform(low, high)
 
-    def uniform(low: float, high: float, default: float) -> Any:
+    def uniform(bounds: tuple[float, float], default: float) -> Any:
+        low, high = bounds
         return default if not enable_ray_tune else tune.uniform(low, high)
 
     def sample_from(func: Callable, default: Any) -> Any:
