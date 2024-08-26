@@ -7,6 +7,7 @@ from typing import Callable, Any
 from ray import train, tune
 import numpy as np
 import multiprocessing
+import json
 
 
 def suppress_print(func: Callable) -> Callable:
@@ -154,101 +155,39 @@ def get_experiment_trial_folder() -> tuple[str, str]:
     return experiment_folder, trial_folder
 
 
-def convert_np_to_native(value: Any) -> Any:
-    if isinstance(value, (np.integer, np.floating)):
-        return value.item()  # Convert to native Python int or float
-    return value  # Return unchanged if it's not a NumPy type
-
-
 def create_tune_function(
     enable_ray_tune: bool,
-) -> tuple[Callable, Callable, Callable, Callable, Callable]:
-    def choice(
-        options: list[Any], default: Any, sample_once_key: str | None = None
-    ) -> Any:
-        if enable_ray_tune:
-            if sample_once_key is not None:
-                # Fix '__fn_ph' issue by modifying the key
-                sample_once_key = f"_{sample_once_key}"
+) -> tuple[Callable, Callable, Callable, Callable]:
+    def choice(options: list[Any], default: Any) -> Any:
+        return default if not enable_ray_tune else tune.choice(options)
 
-                def consistent_sample(config):
-                    # Access the config dictionary directly using the internal key
-                    if sample_once_key not in config:
-                        sampled_value = np.random.choice(options)
-                        config[sample_once_key] = convert_np_to_native(sampled_value)
-                    return config[sample_once_key]
+    def loguniform(low: float, high: float, default: float) -> Any:
+        return default if not enable_ray_tune else tune.loguniform(low, high)
 
-                return tune.sample_from(consistent_sample)
-            else:
-                return tune.choice(options)
-        else:
-            return default
+    def uniform(low: float, high: float, default: float) -> Any:
+        return default if not enable_ray_tune else tune.uniform(low, high)
 
-    def loguniform(
-        low: float, high: float, default: float, sample_once_key: str | None = None
-    ) -> Any:
-        if enable_ray_tune:
-            if sample_once_key is not None:
-                # Fix '__fn_ph' issue by modifying the key
-                sample_once_key = f"_{sample_once_key}"
+    def sample_from(func: Callable, default: Any) -> Any:
+        return default if not enable_ray_tune else tune.sample_from(func)
 
-                def consistent_sample(config):
-                    if sample_once_key not in config:
-                        sampled_value = np.exp(
-                            np.random.uniform(np.log(low), np.log(high))
-                        )
-                        config[sample_once_key] = convert_np_to_native(sampled_value)
-                    return config[sample_once_key]
+    return choice, loguniform, uniform, sample_from
 
-                return tune.sample_from(consistent_sample)
-            else:
-                return tune.loguniform(low, high)
-        else:
-            return default
 
-    def uniform(
-        low: float, high: float, default: float, sample_once_key: str | None = None
-    ) -> Any:
-        if enable_ray_tune:
-            if sample_once_key is not None:
-                # Fix '__fn_ph' issue by modifying the key
-                sample_once_key = f"_{sample_once_key}"
+class PythonEncoder(json.JSONEncoder):
+    def iterencode(self, obj, _one_shot=False):
+        # Encode the object using the parent class method
+        json_iter = super().iterencode(obj, _one_shot)
+        # Replace the JSON-specific values with Python equivalents as we iterate
+        for chunk in json_iter:
+            yield chunk.replace("true", "True").replace("false", "False").replace(
+                "null", "None"
+            )
 
-                def consistent_sample(config):
-                    if sample_once_key not in config:
-                        sampled_value = np.random.uniform(low, high)
-                        config[sample_once_key] = convert_np_to_native(sampled_value)
-                    return config[sample_once_key]
 
-                return tune.sample_from(consistent_sample)
-            else:
-                return tune.uniform(low, high)
-        else:
-            return default
-    
-    def tune_func(
-        func: Callable, default: Any, sample_once_key: str | None = None
-    ) -> Any:
-        if enable_ray_tune:
-            if sample_once_key is not None:
-                # Fix '__fn_ph' issue by modifying the key
-                sample_once_key = f"_{sample_once_key}"
-
-                def consistent_sample(config):
-                    if sample_once_key not in config:
-                        sampled_value = func(config)
-                        config[sample_once_key] = convert_np_to_native(sampled_value)
-                    return config[sample_once_key]
-
-                return tune.sample_from(consistent_sample)
-            else:
-                return tune.sample_from(func)
-        else:
-            return default
-
-    def resolve_key(key: str) -> str:
-        """Helper function to resolve the internal key used in the config."""
-        # Fix '__fn_ph' issue by modifying the key
-        return f"_{key}" if enable_ray_tune else key
-
-    return choice, loguniform, uniform, tune_func, resolve_key
+def store_custom_tunable_params(tunable_params: dict, output_root_path: Path):
+    # Store custom_tunable_params with corresponding kwargs
+    custom_tunable_params = {
+        k: v for k, v in tunable_params.items() if not k.startswith("_")
+    }
+    with open(Path(output_root_path, "custom_tunable_params.json"), "w") as f:
+        json.dump(custom_tunable_params, f, cls=PythonEncoder, indent=4)

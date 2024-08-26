@@ -14,6 +14,7 @@ from utils.ray_tune_tools import (
     timeout_decorator,
     get_experiment_trial_folder,
     create_tune_function,
+    store_custom_tunable_params,
 )
 from main import get_args_from_parser
 from main import trainable as trainable_without_ray_tune
@@ -24,32 +25,19 @@ os.environ["RAY_AIR_NEW_OUTPUT"] = "0"
 
 def get_tunable_params(enable_ray_tune: bool = False) -> dict:
 
-    choice, loguniform, uniform, tune_func, resolve_key = create_tune_function(
-        enable_ray_tune
-    )
+    choice, loguniform, uniform, sample_from = create_tune_function(enable_ray_tune)
     tunable_params = {}
 
     # For MLP
-    tunable_params["hidden_dim"] = choice(
-        [64, 128, 256], 128, sample_once_key="hidden_dim"
-    )
-    tunable_params["num_hidden_layers"] = choice(
-        [0, 1, 2], 2, sample_once_key="num_hidden_layers"
-    )
-    tunable_params["hidden_dim_sizes"] = tune_func(
-        lambda config: [config[resolve_key("hidden_dim")]]
-        * config[resolve_key("num_hidden_layers")],
+    tunable_params["hidden_dim"] = choice([64, 128, 256], 128)
+    tunable_params["num_layers"] = choice([1, 2, 3], 2)
+    tunable_params["hidden_dim_sizes"] = sample_from(
+        lambda config: [config["hidden_dim"]] * config["num_layers"],
         (
             None
             if enable_ray_tune
-            else [tunable_params["hidden_dim"]] * tunable_params["num_hidden_layers"]
+            else [tunable_params["hidden_dim"]] * tunable_params["num_layers"]
         ),
-        sample_once_key="hidden_dim_sizes",
-    )
-    tunable_params["hidden_dim_sizes_2"] = tune_func(
-        lambda config: config[resolve_key("hidden_dim_sizes")],
-        None if enable_ray_tune else tunable_params["hidden_dim_sizes"],
-        sample_once_key="hidden_dim_sizes_2",
     )
 
     tunable_params.update(
@@ -60,18 +48,19 @@ def get_tunable_params(enable_ray_tune: bool = False) -> dict:
                     "CNN",
                 ],
                 "MLP",
-                sample_once_key="model_name",  # No need to worry!
+                # sample_once_key="model_name",  # No need to worry!
             ),
             "model_params": {
                 "MLP": {
+                    # "num_hidden_layers": tunable_params["num_layers"],
                     "hidden_dim_sizes": tunable_params["hidden_dim_sizes"],
                     "hidden_dim_sizes_2": tunable_params[
-                        "hidden_dim_sizes_2"
+                        "hidden_dim_sizes"
                     ],  # just check if we set hidden_dim_sizes correctly
                     "use_bn": choice([True, False], True),
                 },
                 "CNN": {
-                    "num_conv_layers": choice([1, 2, 3], 3),
+                    "num_conv_layers": tunable_params["num_layers"],
                     "use_bn": choice([True, False], True),
                 },
             },
@@ -83,7 +72,7 @@ def get_tunable_params(enable_ray_tune: bool = False) -> dict:
                 [1, 3],
                 # [1, 3, 5, 10],
                 1,
-                sample_once_key="epochs",  # No need to worry!
+                # sample_once_key="epochs",  # No need to worry!
             ),
             "lr_scheduler": choice(
                 [
@@ -145,6 +134,10 @@ def trainable(
             experiment_folder,
             trial_folder,
         )
+
+    # Store custom_tunable_params with corresponding kwargs
+    if enable_ray_tune:
+        store_custom_tunable_params(tunable_params, fixed_params["output_root_path"])
 
     # Run the main function
     return trainable_without_ray_tune(
