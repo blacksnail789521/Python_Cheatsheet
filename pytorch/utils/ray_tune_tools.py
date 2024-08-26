@@ -188,8 +188,17 @@ class PythonEncoder(json.JSONEncoder):
 
 def store_custom_tunable_params(tunable_params: dict, output_root_path: Path):
     # Store custom_tunable_params with corresponding kwargs
+    model_name = tunable_params.get("model_name")
+    model_kwargs = tunable_params.get("model_params", {}).get(model_name, {})
     custom_tunable_params = {
-        k: v for k, v in tunable_params.items() if not k.startswith("_")
+        key: value
+        for key, value in tunable_params.items()
+        if key != "model_params"  # Exclude the full model_params from the copy
     }
+    custom_tunable_params["model_params"] = {
+        model_name: model_kwargs
+    }
+
+    # Save custom_tunable_params to a JSON file with Python-compatible values
     with open(Path(output_root_path, "custom_tunable_params.json"), "w") as f:
         json.dump(custom_tunable_params, f, cls=PythonEncoder, indent=4)
