@@ -24,32 +24,32 @@ os.environ["RAY_AIR_NEW_OUTPUT"] = "0"
 
 def get_tunable_params(enable_ray_tune: bool = False) -> dict:
 
-    choice, loguniform, uniform, resolve_key = create_tune_function(enable_ray_tune)
+    choice, loguniform, uniform, tune_func, resolve_key = create_tune_function(
+        enable_ray_tune
+    )
     tunable_params = {}
 
-    # hidden_dim = choice([64, 128, 256], 128, sample_once_key="hidden_dim")
+    # For MLP
     tunable_params["hidden_dim"] = choice(
         [64, 128, 256], 128, sample_once_key="hidden_dim"
     )
     tunable_params["num_hidden_layers"] = choice(
         [0, 1, 2], 2, sample_once_key="num_hidden_layers"
     )
-    tunable_params["hidden_dim_sizes"] = (
-        tune.sample_from(
-            lambda config: config.setdefault(
-                resolve_key("hidden_dim_sizes"),
-                [config[resolve_key("hidden_dim")]]
-                * config[resolve_key("num_hidden_layers")],
-            )
-        )
-        if enable_ray_tune
-        else [tunable_params["hidden_dim"]] * tunable_params["num_hidden_layers"]
+    tunable_params["hidden_dim_sizes"] = tune_func(
+        lambda config: [config[resolve_key("hidden_dim")]]
+        * config[resolve_key("num_hidden_layers")],
+        (
+            None
+            if enable_ray_tune
+            else [tunable_params["hidden_dim"]] * tunable_params["num_hidden_layers"]
+        ),
+        sample_once_key="hidden_dim_sizes",
     )
-
-    tunable_params["hidden_dim_sizes_2"] = (
-        tune.sample_from(lambda config: config[resolve_key("hidden_dim_sizes")])
-        if enable_ray_tune
-        else tunable_params["hidden_dim_sizes"]
+    tunable_params["hidden_dim_sizes_2"] = tune_func(
+        lambda config: config[resolve_key("hidden_dim_sizes")],
+        None if enable_ray_tune else tunable_params["hidden_dim_sizes"],
+        sample_once_key="hidden_dim_sizes_2",
     )
 
     tunable_params.update(

@@ -162,7 +162,7 @@ def convert_np_to_native(value: Any) -> Any:
 
 def create_tune_function(
     enable_ray_tune: bool,
-) -> tuple[Callable, Callable, Callable, Callable]:
+) -> tuple[Callable, Callable, Callable, Callable, Callable]:
     def choice(
         options: list[Any], default: Any, sample_once_key: str | None = None
     ) -> Any:
@@ -225,10 +225,30 @@ def create_tune_function(
                 return tune.uniform(low, high)
         else:
             return default
+    
+    def tune_func(
+        func: Callable[[dict], Any], default: Any, sample_once_key: str | None = None
+    ) -> Any:
+        if enable_ray_tune:
+            if sample_once_key is not None:
+                # Fix '__fn_ph' issue by modifying the key
+                sample_once_key = f"_{sample_once_key}"
+
+                def consistent_sample(config):
+                    if sample_once_key not in config:
+                        sampled_value = func(config)
+                        config[sample_once_key] = convert_np_to_native(sampled_value)
+                    return config[sample_once_key]
+
+                return tune.sample_from(consistent_sample)
+            else:
+                return tune.sample_from(func)
+        else:
+            return default
 
     def resolve_key(key: str) -> str:
         """Helper function to resolve the internal key used in the config."""
         # Fix '__fn_ph' issue by modifying the key
         return f"_{key}" if enable_ray_tune else key
 
-    return choice, loguniform, uniform, resolve_key
+    return choice, loguniform, uniform, tune_func, resolve_key
