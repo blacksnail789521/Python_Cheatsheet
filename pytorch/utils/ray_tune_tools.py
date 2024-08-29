@@ -8,6 +8,8 @@ from ray import train, tune
 import numpy as np
 import multiprocessing
 import json
+import random
+import math
 
 
 def suppress_print(func: Callable) -> Callable:
@@ -80,7 +82,7 @@ def terminate_early_trial(default_return_metrics: dict = {"test_acc": 0}) -> Cal
             )
 
             def extract_trial_id(working_dir):
-                match = re.search(r"trainable_.{5}_([0-9]{5})_", working_dir)
+                match = re.search(r"trainable_.{5}_([0-9]{5})", working_dir)
                 if match:
                     return int(match.group(1))
                 else:
@@ -156,8 +158,8 @@ def get_experiment_trial_folder() -> tuple[str, str]:
 
 
 def create_tune_function(
-    enable_ray_tune: bool,
-) -> tuple[Callable, Callable, Callable, Callable]:
+    enable_ray_tune: bool, tunable_params: dict
+) -> tuple[Callable, Callable, Callable, Callable, Callable]:
     def choice(options: list[Any], default: Any) -> Any:
         return default if not enable_ray_tune else tune.choice(options)
 
@@ -172,7 +174,13 @@ def create_tune_function(
     def sample_from(func: Callable, default: Any) -> Any:
         return default if not enable_ray_tune else tune.sample_from(func)
 
-    return choice, loguniform, uniform, sample_from
+    def copy_param(key: str) -> Any:
+        if enable_ray_tune:
+            return tune.sample_from(lambda config: config[key])
+        else:
+            return tunable_params[key]
+
+    return choice, loguniform, uniform, sample_from, copy_param
 
 
 class PythonEncoder(json.JSONEncoder):
@@ -197,6 +205,6 @@ def store_custom_tunable_params(tunable_params: dict, output_root_path: Path):
     }
     custom_tunable_params["model_kwargs"] = {model_name: model_kwargs}
 
-    # Save custom_tunable_params to a JSON file with Python-compatible values
-    with open(Path(output_root_path, "custom_tunable_params.json"), "w") as f:
+    # Save custom_tunable_params to a txt file with Python-compatible values
+    with open(Path(output_root_path, "custom_tunable_params.txt"), "w") as f:
         json.dump(custom_tunable_params, f, cls=PythonEncoder, indent=4)
